@@ -839,11 +839,11 @@ public class ModerationReportController implements Controller<Region> {
                     lastModerator.setText("");
                     return null;
                 }
-                if (reportFX.getReportDescription() != null) description.setText(reportFX.getReportDescription());
-                if (reportFX.getModeratorPrivateNote() != null) privateNote.setText(reportFX.getModeratorPrivateNote());
-                if (reportFX.getModeratorNotice() != null) publicNote.setText(reportFX.getModeratorNotice());
-                if (reportFX.getCreateTime() != null) dateCreated.setText(reportFX.getCreateTime().toString());
-                if (reportFX.getLastModerator() != null) lastModerator.setText(reportFX.getLastModerator().getRepresentation());
+                if (reportFX.getReportDescription() != null) description.setText(reportFX.getReportDescription()); else description.setText("");
+                if (reportFX.getModeratorPrivateNote() != null) privateNote.setText(reportFX.getModeratorPrivateNote()); else privateNote.setText("");
+                if (reportFX.getModeratorNotice() != null) publicNote.setText(reportFX.getModeratorNotice()); else publicNote.setText("");
+                if (reportFX.getCreateTime() != null) dateCreated.setText(reportFX.getCreateTime().toString()); else dateCreated.setText("");
+                if (reportFX.getLastModerator() != null) lastModerator.setText(reportFX.getLastModerator().getRepresentation()); else lastModerator.setText("");
                 return null;
             }
         };
