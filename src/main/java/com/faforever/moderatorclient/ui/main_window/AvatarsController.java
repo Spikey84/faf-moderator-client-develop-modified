@@ -71,6 +71,7 @@ public class AvatarsController implements Controller<SplitPane> {
     }
 
     public void refresh() {
+        System.out.println("refeshing");
         avatars.clear();
         avatars.addAll(avatarMapper.map(avatarService.getAll()));
 

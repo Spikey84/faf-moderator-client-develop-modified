@@ -74,6 +74,8 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
@@ -1933,7 +1935,9 @@ public class ViewHelper {
     public static void buildModerationReportTableView(
             TableView<ModerationReportFX> tableView,
             ObservableList<ModerationReportFX> items,
-            Consumer<ModerationReportFX> onChatLog
+            Consumer<ModerationReportFX> onChatLog,
+            @Nullable Consumer<ModerationReportFX> onMarkCompleted,
+            @Nullable Consumer<ModerationReportFX> onMarkDiscarded
     ) {
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tableView.setItems(items);
@@ -1967,16 +1971,19 @@ public class ViewHelper {
                         } else {
                             switch (item) {
                                 case AWAITING:
-                                    setStyle("  -fx-background-color: #dcc414;");
+                                    //setStyle("  -fx-background-color: #dcc414;");
+                                    setStyle("-fx-background-color: rgba(220, 196, 20, 0.40);");
                                     break;
                                 case DISCARDED:
-                                    setStyle("-fx-background-color: #9cabab;");
+                                    //setStyle("-fx-background-color: #9cabab;");
+                                    setStyle("-fx-background-color: rgba(156, 171, 171, 0.40);");
                                     break;
                                 case PROCESSING:
-                                    setStyle("-fx-background-color: rgba(56, 56, 255, 0.85);");
+                                    setStyle("-fx-background-color: rgba(56, 56, 255, 0.40);");
                                     break;
                                 case COMPLETED:
-                                    setStyle("-fx-background-color: #5aad58;");
+                                    //setStyle("-fx-background-color: #5aad58;");
+                                    setStyle("-fx-background-color: rgba(90, 173, 88, 0.40);");
                                     break;
                             }
 
@@ -1988,6 +1995,47 @@ public class ViewHelper {
 
         });
         extractors.put(statusColumn, ModerationReportFX::getReportStatus);
+
+        TableColumn<ModerationReportFX, ModerationReportFX> markCompletedColumn = new TableColumn<>("Complete");
+        markCompletedColumn.setMinWidth(90);
+        markCompletedColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+        markCompletedColumn.setCellFactory(param -> new TableCell<ModerationReportFX, ModerationReportFX>() {
+
+            @Override
+            protected void updateItem(ModerationReportFX item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty) {
+                        Button button = new Button("Complete");
+                        button.setOnMouseClicked(event -> onMarkCompleted.accept(item));
+                        button.setTextFill(Color.rgb(10, 200, 10));
+
+                        setGraphic(button);
+                        return;
+                }
+                setGraphic(null);
+            }
+        });
+        tableView.getColumns().add(markCompletedColumn);
+
+        TableColumn<ModerationReportFX, ModerationReportFX> markDiscardedColumn = new TableColumn<>("Discard");
+        markDiscardedColumn.setMinWidth(75);
+        markDiscardedColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+        markDiscardedColumn.setCellFactory(param -> new TableCell<ModerationReportFX, ModerationReportFX>() {
+
+            @Override
+            protected void updateItem(ModerationReportFX item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty) {
+                    Button button = new Button("Discard");
+                    button.setOnMouseClicked(event -> onMarkDiscarded.accept(item));
+                    button.setTextFill(Color.rgb(200, 10, 10));
+                    setGraphic(button);
+                    return;
+                }
+                setGraphic(null);
+            }
+        });
+        tableView.getColumns().add(markDiscardedColumn);
 
         TableColumn<ModerationReportFX, PlayerFX> reporterColumn = new TableColumn<>("Reporter");
         reporterColumn.setCellFactory(tableColumn -> ViewHelper.playerFXCellFactory(tableColumn, PlayerFX::getLogin));
@@ -2006,15 +2054,14 @@ public class ViewHelper {
         tableView.getColumns().add(reportedUsersColumn);
 
         TableColumn<ModerationReportFX, String> reportDescriptionColumn = new TableColumn<>("Description");
-        reportDescriptionColumn.setPrefWidth(360);
-        reportDescriptionColumn.setCellValueFactory(param -> param.getValue().reportDescriptionProperty());
+        reportDescriptionColumn.setPrefWidth(210);
+        reportDescriptionColumn.setCellValueFactory(param -> param.getValue().reportDescriptionShortProperty());
         reportDescriptionColumn.setCellFactory(column -> {
             TableCell<ModerationReportFX, String> cell = new TableCell<>();
             Text text = new Text();
             cell.setGraphic(text);
             cell.setPrefHeight(Control.USE_COMPUTED_SIZE);
-            cell.setWrapText(true);
-            text.wrappingWidthProperty().bind(Bindings.createDoubleBinding(() -> cell.getWidth() - 10.0, cell.widthProperty()));
+            cell.setMaxHeight(2);
             text.textProperty().bind(cell.itemProperty());
             return cell;
         });
@@ -2038,26 +2085,26 @@ public class ViewHelper {
         tableView.getColumns().add(gameColumn);
         extractors.put(gameColumn, reportFx -> reportFx.getGame() == null ? null : reportFx.getGame().getId());
 
-        if (onChatLog != null) {
-            TableColumn<ModerationReportFX, ModerationReportFX> chatLogColumn = new TableColumn<>("Replay");
-            chatLogColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
-            chatLogColumn.setCellFactory(param -> new TableCell<>() {
-
-                @Override
-                protected void updateItem(ModerationReportFX item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (!empty && item != null && item.getGame() != null) {
-                        Button button = new Button("Load chat log");
-                        button.setOnMouseClicked(event -> onChatLog.accept(item));
-                        setGraphic(button);
-                        return;
-                    }
-                    setGraphic(null);
-                }
-            });
-            chatLogColumn.setMinWidth(120);
-            tableView.getColumns().add(chatLogColumn);
-        }
+//        if (onChatLog != null) {
+//            TableColumn<ModerationReportFX, ModerationReportFX> chatLogColumn = new TableColumn<>("Replay");
+//            chatLogColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+//            chatLogColumn.setCellFactory(param -> new TableCell<>() {
+//
+//                @Override
+//                protected void updateItem(ModerationReportFX item, boolean empty) {
+//                    super.updateItem(item, empty);
+//                    if (!empty && item != null && item.getGame() != null) {
+//                        Button button = new Button("Load chat log");
+//                        button.setOnMouseClicked(event -> onChatLog.accept(item));
+//                        setGraphic(button);
+//                        return;
+//                    }
+//                    setGraphic(null);
+//                }
+//            });
+//            chatLogColumn.setMinWidth(120);
+//            tableView.getColumns().add(chatLogColumn);
+//        }
 
         TableColumn<ModerationReportFX, String> privateNoteColumn = new TableColumn<>("Private Notice");
         privateNoteColumn.setMinWidth(180);
@@ -2074,38 +2121,38 @@ public class ViewHelper {
             return cell;
         });
 
-        TableColumn<ModerationReportFX, String> moderatorPrivateNoticeColumn = new TableColumn<>("Public Note");
-        moderatorPrivateNoticeColumn.setMinWidth(180);
-        moderatorPrivateNoticeColumn.setCellValueFactory(param -> param.getValue().moderatorNoticeProperty());
-        tableView.getColumns().add(moderatorPrivateNoticeColumn);
-        extractors.put(moderatorPrivateNoticeColumn, ModerationReportFX::getModeratorNotice);
+//        TableColumn<ModerationReportFX, String> moderatorPrivateNoticeColumn = new TableColumn<>("Public Note");
+//        moderatorPrivateNoticeColumn.setMinWidth(180);
+//        moderatorPrivateNoticeColumn.setCellValueFactory(param -> param.getValue().moderatorNoticeProperty());
+//        tableView.getColumns().add(moderatorPrivateNoticeColumn);
+//        extractors.put(moderatorPrivateNoticeColumn, ModerationReportFX::getModeratorNotice);
+//
+//        moderatorPrivateNoticeColumn.setCellFactory(column -> {
+//            TableCell<ModerationReportFX, String> cell = new TableCell<>();
+//            Text text = new Text();
+//            cell.setGraphic(text);
+//            text.wrappingWidthProperty().bind(moderatorPrivateNoticeColumn.widthProperty().subtract(5));
+//            text.textProperty().bind(cell.itemProperty());
+//            return cell;
+//        });
+//
+//        TableColumn<ModerationReportFX, String> lastModeratorColumn = new TableColumn<>("Last Moderator");
+//        lastModeratorColumn.setCellValueFactory(o -> Bindings.createStringBinding(() -> {
+//            PlayerFX lastModerator = o.getValue().getLastModerator();
+//            if (lastModerator == null) {
+//                return "null";
+//            }
+//            return lastModerator.getRepresentation();
+//        }, o.getValue().lastModeratorProperty()));
+//        lastModeratorColumn.setMinWidth(150);
+//        tableView.getColumns().add(lastModeratorColumn);
+//        extractors.put(lastModeratorColumn, reportFx -> reportFx.getLastModerator() == null ? null : reportFx.getLastModerator().getLogin());
 
-        moderatorPrivateNoticeColumn.setCellFactory(column -> {
-            TableCell<ModerationReportFX, String> cell = new TableCell<>();
-            Text text = new Text();
-            cell.setGraphic(text);
-            text.wrappingWidthProperty().bind(moderatorPrivateNoticeColumn.widthProperty().subtract(5));
-            text.textProperty().bind(cell.itemProperty());
-            return cell;
-        });
-
-        TableColumn<ModerationReportFX, String> lastModeratorColumn = new TableColumn<>("Last Moderator");
-        lastModeratorColumn.setCellValueFactory(o -> Bindings.createStringBinding(() -> {
-            PlayerFX lastModerator = o.getValue().getLastModerator();
-            if (lastModerator == null) {
-                return "null";
-            }
-            return lastModerator.getRepresentation();
-        }, o.getValue().lastModeratorProperty()));
-        lastModeratorColumn.setMinWidth(150);
-        tableView.getColumns().add(lastModeratorColumn);
-        extractors.put(lastModeratorColumn, reportFx -> reportFx.getLastModerator() == null ? null : reportFx.getLastModerator().getLogin());
-
-        TableColumn<ModerationReportFX, OffsetDateTime> createTimeColumn = new TableColumn<>("Create time");
-        createTimeColumn.setMinWidth(150);
-        createTimeColumn.setCellValueFactory(param -> param.getValue().createTimeProperty());
-        tableView.getColumns().add(createTimeColumn);
-        extractors.put(createTimeColumn, ModerationReportFX::getCreateTime);
+//        TableColumn<ModerationReportFX, OffsetDateTime> createTimeColumn = new TableColumn<>("Create time");
+//        createTimeColumn.setMinWidth(150);
+//        createTimeColumn.setCellValueFactory(param -> param.getValue().createTimeProperty());
+//        tableView.getColumns().add(createTimeColumn);
+//        extractors.put(createTimeColumn, ModerationReportFX::getCreateTime);
 
         applyCopyContextMenus(tableView, extractors);
     }

@@ -3,6 +3,8 @@ package com.faforever.moderatorclient.ui.data_cells;
 import com.faforever.moderatorclient.ui.caches.AvatarCache;
 import com.faforever.moderatorclient.ui.domain.AvatarAssignmentFX;
 import com.faforever.moderatorclient.ui.domain.AvatarFX;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.scene.control.TableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,27 +20,41 @@ public class UrlImageViewTableCell<T> extends TableCell<T, String> {
     protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
 
-        if (item != null) {
-            if (!Objects.equals(currentUrl, item)) {
-                currentUrl = item;
-                Image img;
-                if (getTableRow() != null && getTableRow().getItem() != null) {
-                    String cacheKey = cacheKeyFrom(item, getTableRow().getItem());
-                    if (AvatarCache.getInstance().containsKey(cacheKey)) {
-                        img = AvatarCache.getInstance().get(cacheKey);
-                    } else {
-                        img = new Image(item, true);
-                        AvatarCache.getInstance().put(cacheKey, img);
+
+        if (item == null) return;
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                if (item != null) {
+                    if (!Objects.equals(currentUrl, item)) {
+                        currentUrl = item;
+                        Image img;
+                        if (getTableRow() != null && getTableRow().getItem() != null) {
+                            String cacheKey = cacheKeyFrom(item, getTableRow().getItem());
+                            if (AvatarCache.getInstance().containsKey(cacheKey)) {
+                                img = AvatarCache.getInstance().get(cacheKey);
+                            } else {
+                                img = new Image(item, true);
+                                AvatarCache.getInstance().put(cacheKey, img);
+                            }
+                        } else {
+                            img = new Image(item);
+                        }
+                        imageView.setImage(img);
                     }
+                    Platform.runLater(() -> {
+                        setGraphic(imageView);
+                    });
+
                 } else {
-                    img = new Image(item);
+                    setGraphic(null);
                 }
-                imageView.setImage(img);
+                return null;
             }
-            setGraphic(imageView);
-        } else {
-            setGraphic(null);
-        }
+        };
+
+        new Thread(task).start();
+
     }
 
     private String cacheKeyFrom(String item, Object rawData) {
