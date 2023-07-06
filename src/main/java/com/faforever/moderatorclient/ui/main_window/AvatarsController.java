@@ -57,14 +57,16 @@ public class AvatarsController implements Controller<SplitPane> {
     @FXML
     public void initialize() {
         ViewHelper.buildAvatarTableView(avatarTableView, avatars);
-        ViewHelper.buildAvatarAssignmentTableView(avatarAssignmentTableView, avatarAssignments);
+        ViewHelper.buildAvatarAssignmentTableView(avatarAssignmentTableView, avatarAssignments, this::removeAvatarFromPlayer);
 
         editAvatarButton.disableProperty().bind(avatarTableView.getSelectionModel().selectedItemProperty().isNull());
         deleteAvatarButton.disableProperty().bind(avatarTableView.getSelectionModel().selectedItemProperty().isNull());
 
         avatarTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             avatarAssignments.clear();
-            Optional.ofNullable(newValue).ifPresent(avatar -> avatarAssignments.addAll(avatar.getAssignments()));
+            Optional.ofNullable(newValue).ifPresent(avatar -> {
+                avatarAssignments.addAll(avatar.getAssignments());
+            });
 
             if (newValue != null) {
                 applicationEventPublisher.publishEvent(newValue);
@@ -72,9 +74,23 @@ public class AvatarsController implements Controller<SplitPane> {
         });
     }
 
+    private void removeAvatarFromPlayer(AvatarAssignmentFX a) {
+        AvatarAssignmentFX avatarAssignmentFX = a;
+        Assert.notNull(avatarAssignmentFX, "You need to select a user's avatar.");
+
+        avatarService.removeAvatarAssignment(avatarAssignmentFX);
+        avatarAssignmentTableView.getItems().remove(avatarAssignmentFX);
+        avatarAssignmentFX.getPlayer().getAvatarAssignments().remove(avatarAssignmentFX);
+        avatarAssignmentFX.getAvatar().setAssignments(avatarAssignmentTableView.getItems());
+        avatarAssignmentTableView.refresh();
+        refresh();
+        Optional.ofNullable(a.getAvatar()).ifPresent(avatar -> avatarAssignments.addAll(a.getAvatar().getAssignments()));
+    }
+
     public void refresh() {
         System.out.println("refeshing");
         avatars.clear();
+        avatarAssignments.clear();
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {

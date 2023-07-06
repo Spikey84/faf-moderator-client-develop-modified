@@ -84,7 +84,7 @@ public class FafModeratorClientApplication extends Application {
                 String elapsedTimeStr = String.format("%02d:%02d:%02d", TimeUnit.SECONDS.toHours(elapsedTime),
                         TimeUnit.SECONDS.toMinutes(elapsedTime) % TimeUnit.HOURS.toMinutes(1),
                         TimeUnit.SECONDS.toSeconds(elapsedTime) % TimeUnit.MINUTES.toSeconds(1));
-                Platform.runLater(() -> primaryStage.setTitle("Spikey's Magge's Modified Mordor - Running Time: " + elapsedTimeStr));
+                Platform.runLater(() -> primaryStage.setTitle("Spikey's Magge's Modified Mordor - Running Time: " + elapsedTimeStr + " Active Threads: " + Thread.activeCount()));
                 if (minutes == 4 && seconds >= 14 && seconds <= 20) {
                     String[] emoticons = {" (o︵o )"," (o︵o)"," ( o︵o)", " ( o︵o)/", " ( o︵o)y─", " ( o︵o)y─\uD83D\uDD25", " ( *‿*)y─┛~"};
                     int index = (int) (seconds - 14) % emoticons.length;
