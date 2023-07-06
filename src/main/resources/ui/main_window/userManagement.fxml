@@ -170,6 +170,7 @@
                 <CheckBox fx:id="excludeItemsCheckBox" text="Exclude junk/malformed items (see Settings)"
                           disable="true"/>
                 <Separator/>
+                <Text style="-fx-font-size: 12pt;">Start with UUID, add further CheckBoxes as needed.</Text>
                 <CheckBox fx:id="includeUUIDCheckBox" text="Include UUID"/>
                 <CheckBox fx:id="includeUIDHashCheckBox" text="Include Hash"/>
                 <CheckBox fx:id="includeIPCheckBox" text="Include IP"/>
@@ -182,17 +183,14 @@
                 <Separator/>
                 <Text>maxUniqueUsersThreshold:</Text>
                 <TextField fx:id="maxUniqueUsersThresholdTextField" layoutX="10" layoutY="10"
-                           promptText="Enter an integer value - Default is 100"/>
+                           promptText="Enter an integer value - Default 100"/>
                 <Text>If a unique hardware item has shared properties with more than X accounts, it will inform about
-                    it, but not give details about each account.
-                </Text>
+                    it, but not give details about each account. Default 100</Text>
                 <Separator/>
                 <Text>depthScanningInput:</Text>
                 <TextField fx:id="depthScanningInputTextField" layoutX="10" layoutY="10"
-                           promptText="Enter an integer value - Default is 9000"/>
-                <Text>The depth scanning value, like 1,2 or 3+, sets how many levels deep it should look for each
-                    connected smurf
-                </Text>
+                           promptText="Default 1000" editable="false"/>
+                <Text>WIP - Needs further development. Not editable.</Text>
                 <Separator orientation="VERTICAL"/>
                 <Separator/>
                 <Button fx:id="saveSettingsButton" text="Save Settings" onAction="#saveSettings"/>

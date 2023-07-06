@@ -28,6 +28,7 @@
     <Separator prefHeight="10" />
     <Button fx:id="templateCompletedButton" text="Open template for completed report" mnemonicParsing="false" onAction="#onTemplateCompletedButton" prefWidth="300"/>
     <Button fx:id="templateDiscardedButton" text="Open template for discarded report" mnemonicParsing="false" onAction="#onTemplateDiscardedButton" prefWidth="300"/>
+    <Button fx:id="templatePoorReportQualityButton" text="Open template for 'PoorReportQuality' report" mnemonicParsing="false" onAction="#onTemplatePoorReportQualityButton" prefWidth="300"/>
     <Separator minHeight="10" />
     <Button fx:id="templateButtonPermanentBanButton" text="Open template for permanent ban message" mnemonicParsing="false" onAction="#onTemplateButtonPermanentBanButton" prefWidth="300"/>
     <Separator minHeight="10" />

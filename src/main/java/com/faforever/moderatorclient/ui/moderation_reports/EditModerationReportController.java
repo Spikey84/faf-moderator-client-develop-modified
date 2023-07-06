@@ -6,6 +6,7 @@ import com.faforever.moderatorclient.api.domain.ModerationReportService;
 import com.faforever.moderatorclient.ui.Controller;
 import com.faforever.moderatorclient.ui.domain.ModerationReportFX;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -29,6 +30,7 @@ public class EditModerationReportController implements Controller<Pane> {
 	public TextArea publicNoteTextArea;
 	public ChoiceBox<ModerationReportStatus> statusChoiceBox;
 	public Pane root;
+	public Button pastePoorReportQualityButton;
 	private Runnable onSaveRunnable;
 	private ModerationReportFX moderationReportFx;
 	public Button pasteDiscardedTemplate;
@@ -98,6 +100,16 @@ public class EditModerationReportController implements Controller<Pane> {
 		try {
 			config.load(new FileInputStream(CONFIGURATION_FOLDER + "/config.properties"));
 			pasteTemplate(CONFIGURATION_FOLDER+File.separator+"templateDiscarded.txt", ModerationReportStatus.DISCARDED, Boolean.parseBoolean(config.getProperty("autoDiscardCheckBox", "false")));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void onPastePoorReportQuality(ActionEvent actionEvent) {
+		Properties config = new Properties();
+		try {
+			config.load(new FileInputStream(CONFIGURATION_FOLDER + "/config.properties"));
+			pasteTemplate(CONFIGURATION_FOLDER+File.separator+"templatePoorReportQuality.txt", ModerationReportStatus.DISCARDED, Boolean.parseBoolean(config.getProperty("autoDiscardCheckBox", "false")));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -67,10 +67,10 @@ public class UserService {
         ElideNavigatorOnCollection<Player> navigator = ElideNavigator.of(Player.class)
                 .collection()
                 .addSortingRule("id", false)
-                .pageSize(10000);
+                .pageSize(1000);
         addModeratorIncludes(navigator);
 
-        List<Player> result = fafApi.getPage(Player.class, navigator, 10000, 1, Collections.emptyMap());
+        List<Player> result = fafApi.getPage(Player.class, navigator, 1000, 1, Collections.emptyMap());
         log.trace("found {} users", result.size());
         return playerMapper.mapToFx(result);
     }
