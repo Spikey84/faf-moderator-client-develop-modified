@@ -41,11 +41,14 @@
               GridPane.rowIndex="2" wrapText="true"/>
     <ChoiceBox fx:id="statusChoiceBox" GridPane.columnIndex="1"/>
     <HBox alignment="TOP_RIGHT" spacing="2.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-        <Button fx:id="pasteDiscardedTemplate" prefHeight="30" mnemonicParsing="false"
+        <Button fx:id="pasteCompletedTemplate" prefHeight="30" mnemonicParsing="false"
                 onAction="#onPasteCompletedTemplate" text="Blueprint-COMPLETED">
         </Button>
-        <Button fx:id="pasteCompletedTemplate" prefHeight="30" mnemonicParsing="false"
+        <Button fx:id="pasteDiscardedTemplate" prefHeight="30" mnemonicParsing="false"
                 onAction="#onPasteDiscardedTemplate" text="Blueprint-DISCARDED">
+        </Button>
+        <Button fx:id="pastePoorReportQualityButton" prefHeight="30" mnemonicParsing="false"
+                onAction="#onPastePoorReportQuality" text="Blueprint-PoorQuality">
         </Button>
         <Button mnemonicParsing="false" prefHeight="30" onAction="#close" text="Cancel">
             <HBox.margin>

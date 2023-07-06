@@ -75,6 +75,18 @@ public class LoginController implements Controller<Pane> {
                 try {
                     String homeDirectory = System.getProperty("user.home");
                     String filePath = homeDirectory + File.separator + "account_credentials_mordor.txt";
+                    File file = new File(filePath);
+                    if (!file.exists()) {
+                        try {
+                            boolean created = file.createNewFile();
+                            if (created) {
+                                log.debug("Created account_credentials_mordor.txt file.");
+                            }
+                        } catch (IOException e) {
+                            log.debug("Error creating account_credentials_mordor.txt file: " + e.getMessage());
+                        }
+                    }
+
                     List<String> accountCredentials = Files.readAllLines(Paths.get(filePath));
                     if (!accountCredentials.get(0).isEmpty()) {
                         nameOrEmail = accountCredentials.get(0);

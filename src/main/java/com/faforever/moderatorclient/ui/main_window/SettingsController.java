@@ -1,5 +1,6 @@
 package com.faforever.moderatorclient.ui.main_window;
 
+import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.MenuItem;
@@ -51,6 +52,7 @@ public class SettingsController implements Controller<Region> {
     public Button templateButtonPermanentBanButton;
     public Button saveButton;
     public Button openConfigurationFolderButton;
+    public Button templatePoorReportQualityButton;
 
     private void setDefaultTab(String tabName) {
         Properties config = new Properties();
@@ -153,12 +155,25 @@ public class SettingsController implements Controller<Region> {
                     createTemplateReasonsCheckBoxFile();
                     createTemplateDiscardedFile();
                     createTemplateCompletedFile();
+                    createTemplatePoorReportQuality();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
         loadConfigurationProperties();
+    }
+
+    public void createTemplatePoorReportQuality() {
+        try {
+            File fileTemplatePoorReportQuality = new File(CONFIGURATION_FOLDER + File.separator + "templatePoorReportQuality.txt");
+            String contentFileTemplatePoorReportQuality = "We appreciate your effort in submitting a report; however, the quality of the report can be improved to show that you care about it - More information at §2 here: https://forum.faforever.com/topic/6061/report-system-a-comprehensive-guide";
+            FileWriter writer = new FileWriter(fileTemplatePoorReportQuality);
+            writer.write(contentFileTemplatePoorReportQuality);
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void createTemplateCompletedFile() {
@@ -207,9 +222,9 @@ public class SettingsController implements Controller<Region> {
         try {
             Properties config = new Properties();
             config.load(new FileInputStream(CONFIGURATION_FOLDER + File.separator + "config.properties"));
-            autoDiscardCheckBox.setSelected(Boolean.parseBoolean(config.getProperty("autoDiscardCheckBox", "false")));
-            autoCompleteCheckBox.setSelected(Boolean.parseBoolean(config.getProperty("autoCompleteCheckBox", "false")));
-            String defaultStartingTab = config.getProperty("user.choice.tab", "reportTab");
+            autoDiscardCheckBox.setSelected(Boolean.parseBoolean(config.getProperty("autoDiscardCheckBox")));
+            autoCompleteCheckBox.setSelected(Boolean.parseBoolean(config.getProperty("autoCompleteCheckBox")));
+            String defaultStartingTab = config.getProperty("user.choice.tab");
             defaultStartingTabMenuBar.setText("current default is " + defaultStartingTab);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -261,6 +276,7 @@ public class SettingsController implements Controller<Region> {
     public void onTemplateCompletedButton() throws IOException {openFile(CONFIGURATION_FOLDER + "/templateCompleted.txt");}
     public void onTemplateDiscardedButton() throws IOException {openFile(CONFIGURATION_FOLDER + "/templateDiscarded.txt");}
     public void onReasonsTemplateCheckBoxButton() throws IOException {openFile(CONFIGURATION_FOLDER + "/templateReasonsCheckBox.txt");}
+    public void onTemplatePoorReportQualityButton() throws IOException {openFile(CONFIGURATION_FOLDER + "/templatePoorReportQuality.txt");}
 
     public void onSaveButtonForCheckBox() {
         Properties config = new Properties();

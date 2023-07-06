@@ -625,33 +625,38 @@ public class UserManagementController implements Controller<SplitPane> {
         return excludedItems;
     }
     private void processUsers(String attributeName, String attributeValue, int threshold, StringBuilder logOutput, ArrayList<Object> foundSmurfs) {
-        //logOutput.append("\n\n<START processing users attribute values------------------------->\n");
         List<String> excludedItems = loadExcludedItems();
-        if (excludedItems.contains(attributeValue) && excludeItemsCheckBox.isSelected()) {
+        boolean excludeItemsSelected = excludeItemsCheckBox.isSelected();
+
+        if (excludedItems.contains(attributeValue) && excludeItemsSelected) {
             logOutput.append("\nThe ").append(attributeName).append(" [").append(attributeValue).append("] is an excluded item, skipping.\n");
-        } else {
-            List<PlayerFX> users = userService.findUsersByAttribute(attributeName, attributeValue);
-            attributeName = attributeName.replaceAll("uniqueIds.", "");
-            if (users.size() > threshold) {
-                logOutput.append(String.format("Too many users found with %s [%s]. It might not be relatable, getting ignored. Threshold is %d and found were %d users\n", attributeName, attributeValue, threshold, users.size()));
-            }
-            if (!(users.size() == 1)) {
-                logOutput.append("\n\nUsers for ").append(attributeName).append(" with same value [").append(attributeValue).append("]\n");
-                users.forEach(user -> {
-                    String accountStatus = "active: "; if (user.isBannedGlobally()) {accountStatus = "banned: ";}
-                    String name = user.getRepresentation();
-                    String format = "\t %-20s %-10s" + "\n";
-                    String output = String.format(format, accountStatus, name );
-                    logOutput.append(output);
-                    if(user.getId() != null && !foundSmurfs.contains(user.getId())) {
-                        foundSmurfs.add(user.getId());
-                        usersNotBanned.append(user.getId());
-                       }
-                });
-                //logOutput.append("\n\n<FIN processing users attribute values--------------------------->\n");
+            return;
+        }
+
+        List<PlayerFX> users = userService.findUsersByAttribute(attributeName, attributeValue);
+
+        if (users.size() > threshold) {
+            logOutput.append(String.format("Too many users found with %s [%s]. It might not be relatable, getting ignored. Threshold is %d and found were %d users\n", attributeName, attributeValue, threshold, users.size()));
+            return;
+        }
+
+        if (users.size() != 1) {
+            logOutput.append("\n\nUsers for ").append(attributeName).append(" with same value [").append(attributeValue).append("]\n");
+
+            for (PlayerFX user : users) {
+                String accountStatus = user.isBannedGlobally() ? "banned: " : "active: ";
+                String name = user.getRepresentation();
+                String output = String.format("\t %-20s %-10s\n", accountStatus, name);
+                logOutput.append(output);
+
+                if (user.getId() != null && !foundSmurfs.contains(user.getId())) {
+                    foundSmurfs.add(user.getId());
+                    usersNotBanned.append(user.getId());
+                }
             }
         }
     }
+
 
     public List<String> alreadyCheckedUsers = new ArrayList<>();
 
