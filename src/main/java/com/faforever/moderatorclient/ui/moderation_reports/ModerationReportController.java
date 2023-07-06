@@ -767,7 +767,7 @@ public class ModerationReportController implements Controller<Region> {
                                 if (FilterLogCheckBox.isSelected() && matchFound) {
                                     continue;
                                 }
-                                if (chatLine.contains(report.getReportedUsers().iterator().next().getLogin())) chatLine = chatLine + "THIS IS WORKING!";
+                                if (chatLine.contains(report.getReportedUsers().iterator().next().getLogin())) chatLine = chatLine /*+ "THIS IS WORKING!"*/;
 
                                 chatLogFiltered.append(chatLine).append("\n");
                             }

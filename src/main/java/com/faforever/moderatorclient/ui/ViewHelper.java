@@ -178,7 +178,7 @@ public class ViewHelper {
         TableColumn<AvatarFX, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(o -> o.getValue().idProperty());
         idColumn.setComparator(Comparator.comparingInt(Integer::parseInt));
-        idColumn.setMinWidth(50);
+        idColumn.setMinWidth(25);
         tableView.getColumns().add(idColumn);
         extractors.put(idColumn, AvatarFX::getId);
 
@@ -190,7 +190,7 @@ public class ViewHelper {
 
         TableColumn<AvatarFX, String> tooltipColumn = new TableColumn<>("Tooltip");
         tooltipColumn.setCellValueFactory(o -> o.getValue().tooltipProperty());
-        tooltipColumn.setMinWidth(50);
+        tooltipColumn.setMinWidth(250);
         tableView.getColumns().add(tooltipColumn);
         extractors.put(tooltipColumn, AvatarFX::getTooltip);
 
@@ -201,7 +201,7 @@ public class ViewHelper {
 
         TableColumn<AvatarFX, String> urlColumn = new TableColumn<>("URL");
         urlColumn.setCellValueFactory(o -> o.getValue().urlProperty());
-        urlColumn.setMinWidth(50);
+        urlColumn.setMinWidth(500);
         tableView.getColumns().add(urlColumn);
         extractors.put(urlColumn, AvatarFX::getUrl);
 
@@ -2040,11 +2040,12 @@ public class ViewHelper {
         TableColumn<ModerationReportFX, PlayerFX> reporterColumn = new TableColumn<>("Reporter");
         reporterColumn.setCellFactory(tableColumn -> ViewHelper.playerFXCellFactory(tableColumn, PlayerFX::getLogin));
         reporterColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getReporter()));
-        reporterColumn.setMinWidth(10);
+        reporterColumn.setMinWidth(100);
         tableView.getColumns().add(reporterColumn);
         extractors.put(reporterColumn, reportFx -> reportFx.getReporter().getRepresentation());
 
         TableColumn<ModerationReportFX, String> reportedUsersColumn = new TableColumn<>("Offender");
+        reportedUsersColumn.setMinWidth(100);
         reportedUsersColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getReportedUsers().stream()
                         .map(PlayerFX::getLogin)
                         .collect(Collectors.joining("\n"))
@@ -2069,6 +2070,7 @@ public class ViewHelper {
         extractors.put(reportDescriptionColumn, ModerationReportFX::getReportDescription);
 
         TableColumn<ModerationReportFX, String> incidentTimeCodeColumn = new TableColumn<>("Incident Timecode");
+        incidentTimeCodeColumn.setMinWidth(100);
         //incidentTimeCodeColumn.setMaxWidth(80);
         incidentTimeCodeColumn.setCellValueFactory(param -> param.getValue().gameIncidentTimecodeProperty());
         tableView.getColumns().add(incidentTimeCodeColumn);

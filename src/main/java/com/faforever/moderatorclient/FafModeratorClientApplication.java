@@ -46,7 +46,7 @@ public class FafModeratorClientApplication extends Application {
     public void start(Stage primaryStage) {
         Font.loadFont(getClass().getResource("/style/NotoEmoji-Regular.ttf").toExternalForm(), 12);
         StageHolder.setStage(primaryStage);
-        primaryStage.setTitle("magge's modified Mordor");
+        primaryStage.setTitle("Spikey's Magge's Modified Mordor");
         UiService uiService = applicationContext.getBean(UiService.class);
         MainController mainController = uiService.loadFxml("ui/mainWindow.fxml");
         mainController.display();
@@ -84,12 +84,12 @@ public class FafModeratorClientApplication extends Application {
                 String elapsedTimeStr = String.format("%02d:%02d:%02d", TimeUnit.SECONDS.toHours(elapsedTime),
                         TimeUnit.SECONDS.toMinutes(elapsedTime) % TimeUnit.HOURS.toMinutes(1),
                         TimeUnit.SECONDS.toSeconds(elapsedTime) % TimeUnit.MINUTES.toSeconds(1));
-                Platform.runLater(() -> primaryStage.setTitle("magge's modified Mordor - Running Time: " + elapsedTimeStr));
+                Platform.runLater(() -> primaryStage.setTitle("Spikey's Magge's Modified Mordor - Running Time: " + elapsedTimeStr));
                 if (minutes == 4 && seconds >= 14 && seconds <= 20) {
                     String[] emoticons = {" (o︵o )"," (o︵o)"," ( o︵o)", " ( o︵o)/", " ( o︵o)y─", " ( o︵o)y─\uD83D\uDD25", " ( *‿*)y─┛~"};
                     int index = (int) (seconds - 14) % emoticons.length;
                     String emoticon = emoticons[index];
-                    Platform.runLater(() -> primaryStage.setTitle("magge's modified Mordor - Running Time: " + elapsedTimeStr + " " + emoticon));
+                    Platform.runLater(() -> primaryStage.setTitle("Spikey's Magge's Modified Mordor - Running Time: " + elapsedTimeStr + " " + emoticon));
                 }
                 waitSecond();
             }
