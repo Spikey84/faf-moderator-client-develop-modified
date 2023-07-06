@@ -1,5 +1,9 @@
 package com.faforever.moderatorclient.ui.moderation_reports;
 
+import com.faforever.commons.api.dto.ModerationReport;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import com.faforever.commons.api.dto.ModerationReportStatus;
 import com.faforever.commons.replay.ReplayDataParser;
@@ -51,7 +55,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -97,9 +101,19 @@ public class ModerationReportController implements Controller<Region> {
     public Button CopyGameIDButton;
     public Button StartReplayButton;
 
+    public TextArea description;
+    public TextArea privateNote;
+    public TextArea publicNote;
+    public TextArea lastModerator;
+    public TextArea dateCreated;
+
+
     private FilteredList<ModerationReportFX> filteredItemList;
+    private ObservableMap<Integer, ModerationReportFX> itemMap;
     private ObservableList<ModerationReportFX> itemList;
     private ModerationReportFX currentlySelectedItemNotNull;
+
+    private boolean isLoading = false;
 
     @Override
     public SplitPane getRoot() {
@@ -517,12 +531,24 @@ public class ModerationReportController implements Controller<Region> {
         statusChoiceBox.setItems(FXCollections.observableArrayList(ChooseableStatus.values()));
         statusChoiceBox.getSelectionModel().select(ChooseableStatus.AWAITING);
         editReportButton.disableProperty().bind(reportTableView.getSelectionModel().selectedItemProperty().isNull());
+        itemMap = FXCollections.observableHashMap();
         itemList = FXCollections.observableArrayList();
-        filteredItemList = new FilteredList<>(itemList);
+
+        MapChangeListener<Integer, ModerationReportFX> listener = entry -> {
+            if (entry.wasRemoved()) {
+                itemList.remove(entry.getValueRemoved());
+            } else if (entry.wasAdded()) {
+                itemList.add(entry.getValueAdded());
+            }
+        };
+        itemMap.addListener(listener);
+
+        filteredItemList = new FilteredList<ModerationReportFX>(itemList);
+
         renewFilter();
         SortedList<ModerationReportFX> sortedItemList = new SortedList<>(filteredItemList);
         sortedItemList.comparatorProperty().bind(reportTableView.comparatorProperty());
-        ViewHelper.buildModerationReportTableView(reportTableView, sortedItemList, this::showChatLog);
+        ViewHelper.buildModerationReportTableView(reportTableView, sortedItemList, this::showChatLog, this::markCompletedButton, this::markDiscardedButton);
         statusChoiceBox.getSelectionModel().selectedItemProperty().addListener(observable -> renewFilter());
         playerNameFilterTextField.textProperty().addListener(observable -> renewFilter());
         reportTableView.getSelectionModel()
@@ -533,15 +559,19 @@ public class ModerationReportController implements Controller<Region> {
                         currentlySelectedItemNotNull = newValue;
                         CopyReportIDButton.setId(newValue.getId());
                         CopyReportIDButton.setText("Report ID: " + newValue.getId());
-                        CopyGameIDButton.setId(newValue.getGame().getId());
-                        CopyGameIDButton.setText("Game ID: " + newValue.getGame().getId());
-                        StartReplayButton.setId(CopyGameIDButton.getId());
-                        StartReplayButton.setText("Start Replay: " + CopyGameIDButton.getId());
+                        if (newValue.getGame() != null) {
+                            CopyGameIDButton.setId(newValue.getGame().getId());
+                            CopyGameIDButton.setText("Game ID: " + newValue.getGame().getId());
 
-                        if (AutomaticallyLoadChatLogCheckBox.isSelected()) {
-                            showChatLog(newValue);
-                            log.debug("[LoadChatLog] log automatically loaded");
+                            StartReplayButton.setId(CopyGameIDButton.getId());
+                            StartReplayButton.setText("Start Replay: " + CopyGameIDButton.getId());
+
+                            if (AutomaticallyLoadChatLogCheckBox.isSelected()) {
+                                showChatLog(newValue);
+                                log.debug("[LoadChatLog] log automatically loaded");
+                            }
                         }
+
                         for (PlayerFX item : reportedPlayersOfCurrentlySelectedReport) {
                             log.debug("Selected report id - offenders: " + item.getRepresentation());
                             CopyReportedUserIDButton.setId(item.getRepresentation());
@@ -549,6 +579,7 @@ public class ModerationReportController implements Controller<Region> {
                             CreateReportButton.setId(StringUtils.substringBetween(item.getRepresentation(), " [id ", "]"));
                             CreateReportButton.setText("Create report for " + StringUtils.substringBetween(item.getRepresentation(), " [id ", "]"));
                         }
+                        updateRightUi(newValue);
                     } catch (Exception ErrorSelectedReport) {
                         log.debug("Exception for selected report: ");
                         log.debug(String.valueOf(ErrorSelectedReport));
@@ -568,6 +599,7 @@ public class ModerationReportController implements Controller<Region> {
         chatLogTextArea.setText("select a report first");
         ViewHelper.buildUserTableView(platformService, reportedPlayerTableView, reportedPlayersOfCurrentlySelectedReport, this::addBan,
                 playerFX -> ViewHelper.loadForceRenameDialog(uiService, playerFX), communicationService);
+        updateRightUi(null);
     }
 
     public static void setSysClipboardText(String writeMe) {
@@ -608,20 +640,54 @@ public class ModerationReportController implements Controller<Region> {
     }
 
     public void onRefreshAllReports() {
-        moderationReportService.getAllReports().thenAccept(reportFxes -> {
-            Platform.runLater(() -> itemList.setAll(reportFxes));
-            processStatisticsModerator(reportFxes);
-            showInTableRepeatedOffenders(reportFxes);
-        }).exceptionally(throwable -> {
-            log.error("error loading reports", throwable);
-            return null;
-        });
+        if (isLoading) {
+            System.out.println("Already Updating");
+            return;
+        }
+        isLoading = true;
+        createNewApiRequestThread(1);
+
+    }
+
+    private void createNewApiRequestThread(int x) {
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+
+                moderationReportService.getAllReports(x).thenAccept(reportFxes -> {
+                    Platform.runLater(() -> {
+                        reportFxes.forEach((report -> {
+                            itemMap.put(Integer.valueOf(report.getId()), report);
+                        }));
+                    });
+                    if (reportFxes.size() == 100 || x < 2) {
+                        createNewApiRequestThread(x+1);
+                    } else {
+                        isLoading = false;
+                        Platform.runLater(()-> {
+                            processStatisticsModerator(itemList);
+                            showInTableRepeatedOffenders(itemList);
+                        });
+
+                    }
+                }).exceptionally(throwable -> {
+                    log.error("error loading reports", throwable);
+                    return null;
+                });
+
+                return null;
+            }
+        };
+        new Thread(task).start();
     }
 
     public void onEdit() {
         EditModerationReportController editModerationReportController = uiService.loadFxml("ui/edit_moderation_report.fxml");
         editModerationReportController.setModerationReportFx(reportTableView.getSelectionModel().getSelectedItem());
-        editModerationReportController.setOnSaveRunnable(() -> Platform.runLater(this::onRefreshAllReports));
+        editModerationReportController.setOnSaveRunnable(() -> Platform.runLater( () -> {
+            renewFilter();
+            this.onRefreshAllReports();
+        }));
         //statusChoiceBox.setItems(FXCollections.observableArrayList(ChooseableStatus.values()));
         Stage newCategoryDialog = new Stage();
         newCategoryDialog.setTitle("Edit Report");
@@ -646,58 +712,142 @@ public class ModerationReportController implements Controller<Region> {
         }
     }
 
+    public void asyncChatLogs() {
+
+
+    }
+
     @SneakyThrows
     private void showChatLog(ModerationReportFX report) {
-        GameFX game = report.getGame();
-        String header = format("CHAT LOG -- Report ID {0} -- Replay ID {1} -- Game \"{2}\"\n\n",
-                report.getId(), game.getId(), game.getName());
-        Path tempFilePath = Files.createTempFile(format("faf_replay_", game.getId()), "");
-        try {
-            String replayUrl = game.getReplayUrl(replayDownLoadFormat);
-            log.info("Downloading replay from {} to {}", replayUrl, tempFilePath);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(replayUrl))
-                    .build();
 
-            HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(tempFilePath));
-            if (response.statusCode() == 404) {
-                log.debug("The requested resource was not found on the server");
-                StartReplayButton.setText("Replay not available");
-                CopyChatLogButton.setText("Chat log not available");
-                chatLogTextArea.setText(header + format("Replay not available"));
-            } else {
-                log.debug("The request was successful - parsing replay");
-            ReplayDataParser replayDataParser = new ReplayDataParser(tempFilePath, objectMapper);
-            String chatLog = header + replayDataParser.getChatMessages().stream()
-                    .map(message -> format("[{0}] from {1} to {2}: {3}",
-                            DurationFormatUtils.formatDuration(message.getTime().toMillis(), "HH:mm:ss"),
-                            message.getSender(), message.getReceiver(), message.getMessage()))
-                    .collect(Collectors.joining("\n"));
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    GameFX game = report.getGame();
+                    String header = format("CHAT LOG -- Report ID {0} -- Replay ID {1} -- Game \"{2}\"\n\n",
+                            report.getId(), game.getId(), game.getName());
+                    Path tempFilePath = null;
+                    try {
+                        tempFilePath = Files.createTempFile(format("faf_replay_", game.getId()), "");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        String replayUrl = game.getReplayUrl(replayDownLoadFormat);
+                        log.info("Downloading replay from {} to {}", replayUrl, tempFilePath);
+                        HttpRequest request = HttpRequest.newBuilder()
+                                .uri(URI.create(replayUrl))
+                                .build();
 
-            BufferedReader bufReader = new BufferedReader(new StringReader(chatLog));
+                        HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(tempFilePath));
+                        if (response.statusCode() == 404) {
+                            log.debug("The requested resource was not found on the server");
+                            StartReplayButton.setText("Replay not available");
+                            CopyChatLogButton.setText("Chat log not available");
+                            chatLogTextArea.setText(header + format("Replay not available"));
+                        } else {
+                            log.debug("The request was successful - parsing replay");
+                            ReplayDataParser replayDataParser = new ReplayDataParser(tempFilePath, objectMapper);
+                            String chatLog = header + replayDataParser.getChatMessages().stream()
+                                    .map(message -> format("[{0}] from {1} to {2}: {3}",
+                                            DurationFormatUtils.formatDuration(message.getTime().toMillis(), "HH:mm:ss"),
+                                            message.getSender(), message.getReceiver(), message.getMessage()))
+                                    .collect(Collectors.joining("\n"));
 
-            StringBuilder chatLogFiltered = new StringBuilder();
-            String compileSentences = "Can you give me some mass, |Can you give me some energy, |" +
-                    "Can you give me one Engineer, | to notify: | to allies: Sent Mass | to allies: Sent Energy |" +
-                    " to allies: sent ";
-            Pattern pattern = Pattern.compile(compileSentences);
-            String chatLine;
-            while ((chatLine = bufReader.readLine()) != null) {
-                boolean matchFound = pattern.matcher(chatLine).find();
-                if (FilterLogCheckBox.isSelected() && matchFound) {
-                    continue;
+                            BufferedReader bufReader = new BufferedReader(new StringReader(chatLog));
+
+                            StringBuilder chatLogFiltered = new StringBuilder();
+                            String compileSentences = "Can you give me some mass, |Can you give me some energy, |" +
+                                    "Can you give me one Engineer, | to notify: | to allies: Sent Mass | to allies: Sent Energy |" +
+                                    " to allies: sent ";
+                            Pattern pattern = Pattern.compile(compileSentences);
+                            String chatLine;
+                            while ((chatLine = bufReader.readLine()) != null) {
+                                boolean matchFound = pattern.matcher(chatLine).find();
+                                if (FilterLogCheckBox.isSelected() && matchFound) {
+                                    continue;
+                                }
+                                if (chatLine.contains(report.getReportedUsers().iterator().next().getLogin())) chatLine = chatLine + "THIS IS WORKING!";
+
+                                chatLogFiltered.append(chatLine).append("\n");
+                            }
+                            Platform.runLater(() -> {
+                                CopyChatLogButton.setId(chatLogFiltered.toString());
+                                CopyChatLogButton.setText("Copy Chat Log");
+                                chatLogTextArea.setText(chatLogFiltered.toString());
+                            });
+
+                        }
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            StartReplayButton.setText("Replay not available");
+                            CopyChatLogButton.setText("Chat log not available");
+                            //chatLogTextArea.setText(header + format("Loading replay failed due to {0}: \n{1}", e, e.getMessage()));
+                            chatLogTextArea.setText(header + "Chat log not available");
+                        });
+                    }
+                    try {
+                        Files.delete(tempFilePath);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
                 }
-                chatLogFiltered.append(chatLine).append("\n");
+            };
+            new Thread(task).start();
+    }
+
+    @SneakyThrows
+    private void markCompletedButton(ModerationReportFX report) {
+        String content = new Scanner(new File(CONFIGURATION_FOLDER+File.separator+"templateCompleted.txt")).useDelimiter("\\Z").next();
+        report.setModeratorNotice(content);
+        report.setReportStatus(ModerationReportStatus.COMPLETED);
+        ModerationReport newReport = new ModerationReport();
+        newReport.setId(report.getId());
+        newReport.setReportStatus(report.getReportStatus());
+        newReport.setModeratorPrivateNote(report.getModeratorPrivateNote());
+        newReport.setModeratorNotice(report.getModeratorNotice());
+        moderationReportService.patchReport(newReport);
+        renewFilter();
+        //onRefreshAllReports();
+    }
+
+    @SneakyThrows
+    private void markDiscardedButton(ModerationReportFX report) {
+        String content = new Scanner(new File(CONFIGURATION_FOLDER+File.separator+"templateDiscarded.txt")).useDelimiter("\\Z").next();
+        report.setModeratorNotice(content);
+        report.setReportStatus(ModerationReportStatus.DISCARDED);
+        ModerationReport newReport = new ModerationReport();
+        newReport.setId(report.getId());
+        newReport.setReportStatus(report.getReportStatus());
+        newReport.setModeratorPrivateNote(report.getModeratorPrivateNote());
+        newReport.setModeratorNotice(report.getModeratorNotice());
+        moderationReportService.patchReport(newReport);
+        renewFilter();
+        //onRefreshAllReports();
+    }
+
+    private void updateRightUi(ModerationReportFX reportFX) {
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                if (reportFX == null) {
+                    description.setText("");
+                    privateNote.setText("");
+                    publicNote.setText("");
+                    dateCreated.setText("");
+                    lastModerator.setText("");
+                    return null;
+                }
+                if (reportFX.getReportDescription() != null) description.setText(reportFX.getReportDescription());
+                if (reportFX.getModeratorPrivateNote() != null) privateNote.setText(reportFX.getModeratorPrivateNote());
+                if (reportFX.getModeratorNotice() != null) publicNote.setText(reportFX.getModeratorNotice());
+                if (reportFX.getCreateTime() != null) dateCreated.setText(reportFX.getCreateTime().toString());
+                if (reportFX.getLastModerator() != null) lastModerator.setText(reportFX.getLastModerator().getRepresentation());
+                return null;
             }
-            CopyChatLogButton.setId(chatLogFiltered.toString());
-            CopyChatLogButton.setText("Copy Chat Log");
-            chatLogTextArea.setText(chatLogFiltered.toString());
-            }
-        } catch (Exception e) {
-            StartReplayButton.setText("Replay not available");
-            CopyChatLogButton.setText("Chat log not available");
-            chatLogTextArea.setText(header + format("Loading replay failed due to {0}: \n{1}", e, e.getMessage()));
-        }
-        Files.delete(tempFilePath);
+        };
+
+        new Thread(task).start();
     }
 }

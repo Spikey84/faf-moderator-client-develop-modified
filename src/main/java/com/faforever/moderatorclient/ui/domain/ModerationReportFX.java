@@ -11,6 +11,7 @@ import javafx.collections.ObservableSet;
 
 public class ModerationReportFX extends AbstractEntityFX {
 	private final StringProperty reportDescription;
+	private final StringProperty reportDescriptionShort;
 	private final ObjectProperty<ModerationReportStatus> reportStatus;
 	private final StringProperty gameIncidentTimecode;
 	private final StringProperty moderatorNotice;
@@ -23,6 +24,7 @@ public class ModerationReportFX extends AbstractEntityFX {
 
 	public ModerationReportFX() {
 		reportDescription = new SimpleStringProperty();
+		reportDescriptionShort = new SimpleStringProperty();
 		reportStatus = new SimpleObjectProperty<>();
 		gameIncidentTimecode = new SimpleStringProperty();
 		moderatorNotice = new SimpleStringProperty();
@@ -40,10 +42,20 @@ public class ModerationReportFX extends AbstractEntityFX {
 
 	public void setReportDescription(String reportDescription) {
 		this.reportDescription.set(reportDescription);
+		if (reportDescription == null) {
+			reportDescriptionShort.set(null);
+		} else {
+			this.reportDescriptionShort.set(reportDescription.replace("\n", ""));
+		}
 	}
+
 
 	public StringProperty reportDescriptionProperty() {
 		return reportDescription;
+	}
+
+	public StringProperty reportDescriptionShortProperty() {
+		return reportDescriptionShort;
 	}
 
 	public ModerationReportStatus getReportStatus() {
