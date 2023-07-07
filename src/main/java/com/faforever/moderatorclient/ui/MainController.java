@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @Slf4j
@@ -90,6 +91,9 @@ public class MainController implements Controller<TabPane> {
         } catch (IOException e) {
             log.debug(String.valueOf(e));
         }
+
+        if (checkPermissionForTab(reportTab, GroupPermission.ROLE_ADMIN_MODERATION_REPORT)) moderationReportController.onRefreshAllReports();
+
         return root;
     }
 

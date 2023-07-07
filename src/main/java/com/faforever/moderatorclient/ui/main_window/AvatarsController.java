@@ -98,9 +98,9 @@ public class AvatarsController implements Controller<SplitPane> {
 
                 avatarTableView.getSortOrder().clear();
                 return null;
+
             }
         };
-
         new Thread(task).start();
     }
 

@@ -12,29 +12,36 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
 <SplitPane fx:id="root" dividerPositions="0.5" orientation="VERTICAL" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.faforever.moderatorclient.ui.moderation_reports.ModerationReportController">
     <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
         <VBox spacing="1.0">
-            <ChoiceBox fx:id="statusChoiceBox" minWidth="93" />
+         <Rectangle fill="#373e43" height="25.0" smooth="false" stroke="#00000006" strokeType="INSIDE" width="200.0" />
+            <ChoiceBox fx:id="statusChoiceBox" maxWidth="120.0" minWidth="120.0" prefWidth="120.0" />
             <TextField fx:id="playerNameFilterTextField" promptText="Enter player name to search" />
-            <Button fx:id="editReportButton" minWidth="93" mnemonicParsing="false" onAction="#onEdit" text="Edit" />
-            <Button minWidth="93" mnemonicParsing="false" onAction="#onRefreshAllReports" text="Refresh" />
+            <Button fx:id="editReportButton" minWidth="120.0" mnemonicParsing="false" onAction="#onEdit" text="Edit" />
+            <Button maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onRefreshAllReports" prefWidth="100.0" text="Refresh" />
             <Separator minHeight="10" />
             <Text>Copy:</Text>
-            <Button fx:id="CopyReportIDButton" minWidth="93" mnemonicParsing="false" onAction="#onCopyReportID" text="Report ID" />
-            <Button fx:id="CopyReportedUserIDButton" minWidth="93" mnemonicParsing="false" onAction="#onCopyReportedUserID" text="Offender" />
-            <Button fx:id="CopyGameIDButton" minWidth="93" mnemonicParsing="false" onAction="#onCopyGameID" text="Game ID" />
+            <Button fx:id="CopyReportIDButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onCopyReportID" prefWidth="100.0" text="Report ID" />
+            <Button fx:id="CopyReportedUserIDButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onCopyReportedUserID" prefWidth="100.0" text="Offender" />
+            <Button fx:id="CopyGameIDButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onCopyGameID" prefWidth="100.0" text="Game ID" />
             <Separator prefHeight="10" />
-            <Button fx:id="CopyChatLogButton" minWidth="93" mnemonicParsing="false" onAction="#onCopyChatLog" text="Chat log" />
+            <Button fx:id="CopyChatLogButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onCopyChatLog" prefWidth="100.0" text="Chat log" />
             <Separator minHeight="10" />
-            <Button fx:id="CreateReportButton" minWidth="93" mnemonicParsing="false" onAction="#onCreateReportButton" text="Create report" />
+            <Button fx:id="CreateReportButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onCreateReportButton" prefWidth="100.0" text="Create report" />
             <Separator prefHeight="10" />
-            <Button fx:id="UseTemplateWithoutReasonsButton" minWidth="93" mnemonicParsing="false" onAction="#onUseTemplateWithoutReasonsButton" text="Use template" />
-            <Button fx:id="UseTemplateWithReasonsButton" minWidth="93" mnemonicParsing="false" onAction="#onUseTemplateWithReasonsButton" text="with adding reasons" />
+            <Button fx:id="UseTemplateWithoutReasonsButton" maxWidth="120.0" minWidth="93" mnemonicParsing="false" onAction="#onUseTemplateWithoutReasonsButton" prefWidth="100.0" text="Use Template" />
+            <Button fx:id="UseTemplateWithReasonsButton" maxWidth="120.0" minHeight="40.0" minWidth="120.0" mnemonicParsing="false" onAction="#onUseTemplateWithReasonsButton" prefHeight="20.0" prefWidth="120.0" text="Use Template With Added Reason" textAlignment="CENTER" wrapText="true">
+            <font>
+               <Font size="11.0" />
+            </font></Button>
             <Separator prefHeight="10" />
             <Text>Replay settings</Text>
             <CheckBox fx:id="FilterLogCheckBox" mnemonicParsing="false" selected="true" text="Ignore notify messages">
@@ -42,95 +49,143 @@
             <CheckBox fx:id="AutomaticallyLoadChatLogCheckBox" mnemonicParsing="false" selected="true" text="Auto load chat log">
             </CheckBox>
             <Separator prefHeight="10" />
-            <Button fx:id="StartReplayButton" minWidth="93" mnemonicParsing="false" onAction="#onStartReplay" text="Start Replay" />
+            <Button fx:id="StartReplayButton" maxWidth="120.0" minWidth="120.0" mnemonicParsing="false" onAction="#onStartReplay" prefWidth="120.0" text="Start Replay" />
         </VBox>
         <TableView fx:id="reportTableView" maxHeight="1.7976931348623157E308" maxWidth="1200.0" prefWidth="600.0" HBox.hgrow="ALWAYS" />
-      <VBox prefHeight="200.0">
+      <VBox prefHeight="200.0" style="-fx-background-color: #373e43;">
          <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Description" />
+            <Rectangle fill="#373e43" height="5.0" smooth="false" stroke="TRANSPARENT" strokeType="INSIDE" width="600.0" />
+            <Text fill="LIGHTGRAY" strokeType="OUTSIDE" strokeWidth="0.0" text="Description">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Text>
             <TextArea fx:id="description" editable="false" maxWidth="1.7976931348623157E308" prefHeight="200.0" wrapText="true" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Private Note" />
+            <Text fill="LIGHTGRAY" strokeType="OUTSIDE" strokeWidth="0.0" text="Private Note">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Text>
             <TextArea fx:id="privateNote" editable="false" maxHeight="15.0" prefHeight="200.0" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Public Note" />
+            <Text fill="LIGHTGRAY" strokeType="OUTSIDE" strokeWidth="0.0" text="Public Note">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Text>
             <TextArea fx:id="publicNote" editable="false" maxHeight="15.0" prefHeight="200.0" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Last Moderator" />
+            <Text fill="LIGHTGRAY" strokeType="OUTSIDE" strokeWidth="0.0" text="Last Moderator">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Text>
             <TextArea fx:id="lastModerator" editable="false" prefHeight="15.0" prefWidth="200.0" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Date Created" />
+            <Text fill="LIGHTGRAY" strokeType="OUTSIDE" strokeWidth="0.0" text="Date Created">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Text>
             <TextArea fx:id="dateCreated" editable="false" prefHeight="15.0" />
          </children>
       </VBox>
     </HBox>
-    <TabPane tabClosingPolicy="UNAVAILABLE">
-        <Tab text="Chat log">
-            <TextArea fx:id="chatLogTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
-        </Tab>
-        <Tab text="Reported accounts">
-            <TableView fx:id="reportedPlayerTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
-        </Tab>
-        <Tab text="Most reported accounts">
-            <TableView fx:id="mostReportedAccountsTableView">
-                <columns>
-                    <TableColumn minWidth="150" text="Player">
-                        <cellValueFactory>
-                            <PropertyValueFactory property="player" />
-                        </cellValueFactory>
-                    </TableColumn>
-                    <TableColumn minWidth="100" text="Offense count">
-                        <cellValueFactory>
-                            <PropertyValueFactory property="offenseCount" />
-                        </cellValueFactory>
-                    </TableColumn>
-                    <TableColumn minWidth="100" text="Contains RU">
-                        <cellValueFactory>
-                            <PropertyValueFactory property="ContainsRU" />
-                        </cellValueFactory>
-                    </TableColumn>
-                    <TableColumn minWidth="200" text="Last reported">
-                        <cellValueFactory>
-                            <PropertyValueFactory property="lastReported" />
-                        </cellValueFactory>
-                    </TableColumn>
-                </columns>
-            </TableView>
-        </Tab>
-        <Tab text="Moderator statistics">
-            <VBox>
-                <TextArea fx:id="moderatorStatisticsTextArea" editable="false" maxHeight="30" minHeight="30" prefHeight="30" />
-                <TableView fx:id="moderatorStatisticsTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
-                    <columns>
-                        <TableColumn minWidth="200" text="Moderator">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="moderator" />
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn minWidth="100" text="All reports">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="allReports" />
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn minWidth="100" text="Completed reports">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="completedReports" />
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn minWidth="100" text="Discarded reports">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="discardedReports" />
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn minWidth="100" text="Processing reports">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="processingReports" />
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn minWidth="200" text="Last activity">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="lastActivity" />
-                            </cellValueFactory>
-                        </TableColumn>
-                    </columns>
-                </TableView>
-            </VBox>
-        </Tab>
-    </TabPane>
+   <HBox maxHeight="1.7976931348623157E308" prefHeight="100.0" prefWidth="200.0">
+      <children>
+         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="600.0" prefWidth="600.0">
+            <children>
+               <TabPane maxHeight="1.7976931348623157E308" prefHeight="700.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+                 <tabs>
+                   <Tab text="Chat Log">
+                     <content>
+                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                              <children>
+                                    <TextArea fx:id="chatLogTextArea" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="700.0" prefWidth="600.0" />
+                              </children>
+                           </AnchorPane>
+                     </content>
+                   </Tab>
+                   <Tab text="Moderation Log">
+                     <content>
+                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                              <children>
+                                 <TextArea fx:id="moderationLog" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="700.0" prefWidth="600.0" />
+                              </children>
+                           </AnchorPane>
+                     </content>
+                   </Tab>
+                 </tabs>
+               </TabPane>
+            </children>
+         </VBox>
+          <TabPane maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE">
+              <Tab text="Reported accounts">
+                  <TableView fx:id="reportedPlayerTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+              </Tab>
+              <Tab text="Most reported accounts">
+                  <TableView fx:id="mostReportedAccountsTableView">
+                      <columns>
+                          <TableColumn minWidth="150" text="Player">
+                              <cellValueFactory>
+                                  <PropertyValueFactory property="player" />
+                              </cellValueFactory>
+                          </TableColumn>
+                          <TableColumn minWidth="100" text="Offense count">
+                              <cellValueFactory>
+                                  <PropertyValueFactory property="offenseCount" />
+                              </cellValueFactory>
+                          </TableColumn>
+                          <TableColumn minWidth="100" text="Contains RU">
+                              <cellValueFactory>
+                                  <PropertyValueFactory property="ContainsRU" />
+                              </cellValueFactory>
+                          </TableColumn>
+                          <TableColumn minWidth="200" text="Last reported">
+                              <cellValueFactory>
+                                  <PropertyValueFactory property="lastReported" />
+                              </cellValueFactory>
+                          </TableColumn>
+                      </columns>
+                  </TableView>
+              </Tab>
+              <Tab text="Moderator statistics">
+                  <VBox>
+                      <TextArea fx:id="moderatorStatisticsTextArea" editable="false" maxHeight="30" minHeight="30" prefHeight="30" />
+                      <TableView fx:id="moderatorStatisticsTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                          <columns>
+                              <TableColumn minWidth="200" text="Moderator">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="moderator" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                              <TableColumn minWidth="100" text="All reports">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="allReports" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                              <TableColumn minWidth="100" text="Completed reports">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="completedReports" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                              <TableColumn minWidth="100" text="Discarded reports">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="discardedReports" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                              <TableColumn minWidth="100" text="Processing reports">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="processingReports" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                              <TableColumn minWidth="200" text="Last activity">
+                                  <cellValueFactory>
+                                      <PropertyValueFactory property="lastActivity" />
+                                  </cellValueFactory>
+                              </TableColumn>
+                          </columns>
+                      </TableView>
+                  </VBox>
+              </Tab>
+          </TabPane>
+      </children>
+   </HBox>
 </SplitPane>

@@ -31,7 +31,7 @@ public class ModerationReportService {
 		fafApi.patch(ElideNavigator.of(ModerationReport.class).id(dto.getId()), dto);
 	}
 
-	public CompletableFuture<List<ModerationReportFX>> getAllReports(int page) {
+	public CompletableFuture<List<ModerationReportFX>> getPageOfReports(int page, int pageSize) {
 		return CompletableFuture.supplyAsync(() -> {
             List<ModerationReport> reports = fafApi.getPage(ModerationReport.class, ElideNavigator.of(ModerationReport.class)
 					.collection()
@@ -41,7 +41,7 @@ public class ModerationReportService {
 					.addInclude("lastModerator")
 					.addInclude("reportedUsers")
                     .addInclude("reportedUsers.bans")
-					.addSortingRule("id", false), 100, page,
+					.addSortingRule("id", false), pageSize, page,
 					ImmutableMap.of()
 
 			);

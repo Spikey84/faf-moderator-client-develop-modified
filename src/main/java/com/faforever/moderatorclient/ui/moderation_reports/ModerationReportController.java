@@ -40,6 +40,7 @@ import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -106,6 +107,7 @@ public class ModerationReportController implements Controller<Region> {
     public TextArea publicNote;
     public TextArea lastModerator;
     public TextArea dateCreated;
+    public TextArea moderationLog;
 
 
     private FilteredList<ModerationReportFX> filteredItemList;
@@ -289,47 +291,59 @@ public class ModerationReportController implements Controller<Region> {
         }
     }
 
-    private void showInTableRepeatedOffenders(List<ModerationReportFX> reports) {
-        Map<String, Long> offendersAwaitingReports = reports.stream()
-                .filter(report -> report.getReportStatus().equals(ModerationReportStatus.AWAITING))
-                .flatMap(report -> report.getReportedUsers().stream())
-                .collect(Collectors.groupingBy(PlayerFX::getRepresentation, Collectors.counting()));
+    private void showInTableRepeatedOffenders(List<ModerationReportFX> reps) {
 
-        Map<String, Long> sortedOffendersAwaitingReports = offendersAwaitingReports.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                List<ModerationReportFX> reports = Lists.newArrayList(reps.listIterator());
 
-        List<Offender> offenders = sortedOffendersAwaitingReports.entrySet().stream().map(entry -> {
-            String offenderUsername = entry.getKey();
-            Long offenderReportCount = entry.getValue();
-            String containsRU = reports.stream()
-                    .filter(report -> report.getReportedUsers().stream()
-                            .anyMatch(user -> user.getRepresentation().equals(offenderUsername)))
-                    .anyMatch(report -> report.getReportDescription().matches(".*[А-Яа-я]+.*")) ? "yes" : "no";
+                Map<String, Long> offendersAwaitingReports = reports.stream()
+                        .filter(report -> report.getReportStatus().equals(ModerationReportStatus.AWAITING))
+                        .flatMap(report -> report.getReportedUsers().stream())
+                        .collect(Collectors.groupingBy(PlayerFX::getRepresentation, Collectors.counting()));
 
-            Optional<OffsetDateTime> maxCreateTime = reports.stream()
-                    .filter(report -> report.getReportedUsers().stream()
-                            .anyMatch(user -> user.getRepresentation().equals(offenderUsername)))
-                    .map(ModerationReportFX::getCreateTime)
-                    .max(Comparator.naturalOrder());
-            assert maxCreateTime.orElse(null) != null;
-            LocalDateTime lastReported = maxCreateTime.orElse(null).toLocalDateTime();
+                Map<String, Long> sortedOffendersAwaitingReports = offendersAwaitingReports.entrySet().stream()
+                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-            return new Offender(offenderUsername, offenderReportCount, containsRU, lastReported);
-        }).collect(Collectors.toList());
+                List<Offender> offenders = sortedOffendersAwaitingReports.entrySet().stream().map(entry -> {
+                    String offenderUsername = entry.getKey();
+                    Long offenderReportCount = entry.getValue();
+                    String containsRU = reports.stream()
+                            .filter(report -> report.getReportedUsers().stream()
+                                    .anyMatch(user -> user.getRepresentation().equals(offenderUsername)))
+                            .anyMatch(report -> report.getReportDescription().matches(".*[А-Яа-я]+.*")) ? "yes" : "no";
 
-        Platform.runLater(() -> mostReportedAccountsTableView.setItems(FXCollections.observableArrayList(offenders)));
+                    Optional<OffsetDateTime> maxCreateTime = reports.stream()
+                            .filter(report -> report.getReportedUsers().stream()
+                                    .anyMatch(user -> user.getRepresentation().equals(offenderUsername)))
+                            .map(ModerationReportFX::getCreateTime)
+                            .max(Comparator.naturalOrder());
+                    assert maxCreateTime.orElse(null) != null;
+                    LocalDateTime lastReported = maxCreateTime.orElse(null).toLocalDateTime();
 
-        mostReportedAccountsTableView.setOnKeyPressed(event -> {
-            if (event.isControlDown() && event.getCode() == KeyCode.C) {
-                Offender selectedOffender = (Offender) mostReportedAccountsTableView.getSelectionModel().getSelectedItem();
-                if (selectedOffender != null) {
-                    StringSelection stringSelection = new StringSelection(selectedOffender.getPlayer());
-                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                    clipboard.setContents(stringSelection, null);
-                }
+                    return new Offender(offenderUsername, offenderReportCount, containsRU, lastReported);
+                }).collect(Collectors.toList());
+
+                Platform.runLater(() -> mostReportedAccountsTableView.setItems(FXCollections.observableArrayList(offenders)));
+
+                mostReportedAccountsTableView.setOnKeyPressed(event -> {
+                    if (event.isControlDown() && event.getCode() == KeyCode.C) {
+                        Offender selectedOffender = (Offender) mostReportedAccountsTableView.getSelectionModel().getSelectedItem();
+                        if (selectedOffender != null) {
+                            StringSelection stringSelection = new StringSelection(selectedOffender.getPlayer());
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            clipboard.setContents(stringSelection, null);
+                        }
+                    }
+                });
+                return null;
             }
-        });
+        };
+
+        new Thread(task).start();
+
     }
 
     public class ModeratorStatistics {
@@ -387,86 +401,97 @@ public class ModerationReportController implements Controller<Region> {
         }
     }
 
-    private void processStatisticsModerator(List<ModerationReportFX> reports) {
-        //TODO ref readable
+    private void processStatisticsModerator(List<ModerationReportFX> reps) {
 
-        Map<PlayerFX, Map<ModerationReportStatus, Integer>> moderatorReportCounts = new HashMap<>();
-        for (ModerationReportFX report : reports) {
-            if (report.getLastModerator() != null) {
-                moderatorReportCounts.computeIfAbsent(report.getLastModerator(), k -> new HashMap<>());
-                moderatorReportCounts.get(report.getLastModerator()).compute(report.getReportStatus(), (k, v) -> v == null ? 1 : v + 1);
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                //TODO ref readable
+                ArrayList<ModerationReportFX> reports = Lists.newArrayList(reps.iterator());
+
+                Map<PlayerFX, Map<ModerationReportStatus, Integer>> moderatorReportCounts = new HashMap<>();
+                for (ModerationReportFX report : reports) {
+                    if (report.getLastModerator() != null) {
+                        moderatorReportCounts.computeIfAbsent(report.getLastModerator(), k -> new HashMap<>());
+                        moderatorReportCounts.get(report.getLastModerator()).compute(report.getReportStatus(), (k, v) -> v == null ? 1 : v + 1);
+                    }
+                }
+
+                Map<ModerationReportStatus, Integer> totalReportCounts = new HashMap<>();
+                for (ModerationReportFX report : reports) {
+                    totalReportCounts.compute(report.getReportStatus(), (k, v) -> v == null ? 1 : v + 1);
+                }
+
+                int totalReports = 0;
+                for (Integer count : totalReportCounts.values()) {
+                    totalReports += count;
+                }
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("All Reports: ").append(totalReports).append(" | ");
+                sb.append("Completed: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.COMPLETED, 0)).append(" | ");
+                sb.append("Discarded: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.DISCARDED, 0)).append(" | ");
+                sb.append("Awaiting: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.AWAITING, 0)).append(" | ");
+                sb.append("Processing: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.PROCESSING, 0));
+
+                Set<String> uniqueModerators = new HashSet<>();
+                for (ModerationReportFX report : reports) {
+                    if (report.getLastModerator() != null) {
+                        uniqueModerators.add(report.getLastModerator().getRepresentation());
+                    }
+                }
+
+                ObservableList<ModeratorStatistics> data = FXCollections.observableArrayList();
+                for (String moderator : uniqueModerators) {
+                    data.add(new ModeratorStatistics(moderator));
+                }
+
+                Map<String, Long> reportsByModeratorAndStatus = reports.stream()
+                        .filter(report -> report.getLastModerator() != null)
+                        .filter(report -> report.getReportStatus().equals(ModerationReportStatus.DISCARDED)
+                                || report.getReportStatus().equals(ModerationReportStatus.COMPLETED)
+                                || report.getReportStatus().equals(ModerationReportStatus.PROCESSING))
+                        .collect(Collectors.groupingBy(r -> r.getLastModerator().getRepresentation() + "-" + r.getReportStatus().name(), Collectors.counting()));
+
+                for (ModeratorStatistics moderatorStat : data) {
+                    moderatorStat.setCompletedReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-COMPLETED", 0L));
+                    moderatorStat.setDiscardedReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-DISCARDED", 0L));
+                    moderatorStat.setProcessingReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-PROCESSING", 0L));
+                }
+
+                Map<String, Long> allReportsByModerator = reports.stream()
+                        .filter(report -> report.getLastModerator() != null)
+                        .filter(report -> report.getReportStatus().equals(ModerationReportStatus.DISCARDED)
+                                || report.getReportStatus().equals(ModerationReportStatus.COMPLETED)
+                                || report.getReportStatus().equals(ModerationReportStatus.PROCESSING))
+                        .collect(Collectors.groupingBy(r -> r.getLastModerator().getRepresentation(), Collectors.counting()));
+
+                for (ModeratorStatistics moderatorStat : data) {
+                    moderatorStat.setAllReports(allReportsByModerator.getOrDefault(moderatorStat.getModerator(), 0L));
+                }
+
+                Map<String, OffsetDateTime> maxLastActivityByModerator = reports.stream()
+                        .filter(report -> report.getLastModerator() != null)
+                        .collect(Collectors.groupingBy(report -> report.getLastModerator().getRepresentation(),
+                                Collectors.mapping(ModerationReportFX::getUpdateTime, Collectors.maxBy(Comparator.naturalOrder()))
+                        ))
+                        .entrySet().stream()
+                        .filter(entry -> entry.getValue().isPresent())
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
+
+                for (ModeratorStatistics moderatorStat : data) {
+                    moderatorStat.setLastActivity(maxLastActivityByModerator.get(moderatorStat.getModerator()).toLocalDateTime());
+                }
+                Platform.runLater(() -> {
+                    moderatorStatisticsTableView.setItems(data);
+                    moderatorStatisticsTextArea.setText(sb.toString());
+                });
+                return null;
             }
-        }
+        };
 
-        Map<ModerationReportStatus, Integer> totalReportCounts = new HashMap<>();
-        for (ModerationReportFX report : reports) {
-            totalReportCounts.compute(report.getReportStatus(), (k, v) -> v == null ? 1 : v + 1);
-        }
+        new Thread(task).start();
 
-        int totalReports = 0;
-        for (Integer count : totalReportCounts.values()) {
-            totalReports += count;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("All Reports: ").append(totalReports).append(" | ");
-        sb.append("Completed: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.COMPLETED, 0)).append(" | ");
-        sb.append("Discarded: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.DISCARDED, 0)).append(" | ");
-        sb.append("Awaiting: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.AWAITING, 0)).append(" | ");
-        sb.append("Processing: ").append(totalReportCounts.getOrDefault(ModerationReportStatus.PROCESSING, 0));
-
-        Set<String> uniqueModerators = new HashSet<>();
-        for (ModerationReportFX report : reports) {
-            if (report.getLastModerator() != null) {
-                uniqueModerators.add(report.getLastModerator().getRepresentation());
-            }
-        }
-
-        ObservableList<ModeratorStatistics> data = FXCollections.observableArrayList();
-        for (String moderator : uniqueModerators) {
-            data.add(new ModeratorStatistics(moderator));
-        }
-
-        Map<String, Long> reportsByModeratorAndStatus = reports.stream()
-                .filter(report -> report.getLastModerator() != null)
-                .filter(report -> report.getReportStatus().equals(ModerationReportStatus.DISCARDED)
-                        || report.getReportStatus().equals(ModerationReportStatus.COMPLETED)
-                        || report.getReportStatus().equals(ModerationReportStatus.PROCESSING))
-                .collect(Collectors.groupingBy(r -> r.getLastModerator().getRepresentation() + "-" + r.getReportStatus().name(), Collectors.counting()));
-
-        for (ModeratorStatistics moderatorStat : data) {
-            moderatorStat.setCompletedReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-COMPLETED", 0L));
-            moderatorStat.setDiscardedReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-DISCARDED", 0L));
-            moderatorStat.setProcessingReports(reportsByModeratorAndStatus.getOrDefault(moderatorStat.getModerator() + "-PROCESSING", 0L));
-        }
-
-        Map<String, Long> allReportsByModerator = reports.stream()
-                .filter(report -> report.getLastModerator() != null)
-                .filter(report -> report.getReportStatus().equals(ModerationReportStatus.DISCARDED)
-                        || report.getReportStatus().equals(ModerationReportStatus.COMPLETED)
-                        || report.getReportStatus().equals(ModerationReportStatus.PROCESSING))
-                .collect(Collectors.groupingBy(r -> r.getLastModerator().getRepresentation(), Collectors.counting()));
-
-        for (ModeratorStatistics moderatorStat : data) {
-            moderatorStat.setAllReports(allReportsByModerator.getOrDefault(moderatorStat.getModerator(), 0L));
-        }
-
-        Map<String, OffsetDateTime> maxLastActivityByModerator = reports.stream()
-                .filter(report -> report.getLastModerator() != null)
-                .collect(Collectors.groupingBy(report -> report.getLastModerator().getRepresentation(),
-                        Collectors.mapping(ModerationReportFX::getUpdateTime, Collectors.maxBy(Comparator.naturalOrder()))
-                ))
-                .entrySet().stream()
-                .filter(entry -> entry.getValue().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
-
-        for (ModeratorStatistics moderatorStat : data) {
-            moderatorStat.setLastActivity(maxLastActivityByModerator.get(moderatorStat.getModerator()).toLocalDateTime());
-        }
-        Platform.runLater(() -> {
-            moderatorStatisticsTableView.setItems(data);
-            moderatorStatisticsTextArea.setText(sb.toString());
-        });
     }
 
     public static class Offender {
@@ -597,6 +622,7 @@ public class ModerationReportController implements Controller<Region> {
                     }
                 });
         chatLogTextArea.setText("select a report first");
+        moderationLog.setText("Coming soon!");
         ViewHelper.buildUserTableView(platformService, reportedPlayerTableView, reportedPlayersOfCurrentlySelectedReport, this::addBan,
                 playerFX -> ViewHelper.loadForceRenameDialog(uiService, playerFX), communicationService);
         updateRightUi(null);
@@ -645,29 +671,36 @@ public class ModerationReportController implements Controller<Region> {
             return;
         }
         isLoading = true;
-        createNewApiRequestThread(1);
+        createNewApiRequestThread(1, true);
 
     }
 
-    private void createNewApiRequestThread(int x) {
+    private void createNewApiRequestThread(int x, boolean recursive) {
+        int pageSize = 100;
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
 
-                moderationReportService.getAllReports(x).thenAccept(reportFxes -> {
+                moderationReportService.getPageOfReports(x, pageSize).thenAccept(reportFxes -> {
                     Platform.runLater(() -> {
                         reportFxes.forEach((report -> {
                             itemMap.put(Integer.valueOf(report.getId()), report);
                         }));
                     });
-                    if (reportFxes.size() == 100 || x < 2) {
-                        createNewApiRequestThread(x+1);
+                    if (reportFxes.size() == pageSize || x < 2) {
+                        if (recursive) {
+                            createNewApiRequestThread(x+5, true);
+                            for (int i = 1; i < 5; i++) {
+                                createNewApiRequestThread(x+i, false);
+                            }
+                        }
+
                     } else {
                         isLoading = false;
-                        Platform.runLater(()-> {
+                        //Platform.runLater(()-> {
                             processStatisticsModerator(itemList);
                             showInTableRepeatedOffenders(itemList);
-                        });
+                        //});
 
                     }
                 }).exceptionally(throwable -> {
