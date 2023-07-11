@@ -1,51 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="root" xmlns="http://javafx.com/javafx/8.0.111"
-      fx:controller="com.faforever.moderatorclient.ui.main_window.SettingsController">
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.faforever.moderatorclient.ui.main_window.SettingsController">
     <Text style="-fx-font-size: 12pt;">Account credentials:</Text>
-    <TextField fx:id="accountNameOrEmailTextField" minWidth="300" promptText="Account name or email"/>
-    <PasswordField fx:id="accountPasswordField" minWidth="300" promptText="Password"/>
-    <Button fx:id="saveAccountButton" text="Save credentials" mnemonicParsing="false" onAction="#onSaveAccountButton"/>
+    <TextField fx:id="accountNameOrEmailTextField" minWidth="300" promptText="Account name or email" />
+    <PasswordField fx:id="accountPasswordField" minWidth="300" promptText="Password" />
+    <Button fx:id="saveAccountButton" mnemonicParsing="false" onAction="#onSaveAccountButton" text="Save credentials" />
     <Separator prefHeight="10" />
-    <Text style="-fx-font-size: 12pt;" text="Account credentials are saved in user.home"/>
-    <TextField fx:id="pathAccountFile"/>
+    <Text style="-fx-font-size: 12pt;" text="Account credentials are saved in user.home" />
+    <TextField fx:id="pathAccountFile" />
     <Text style="-fx-font-size: 12pt;">Open blacklisted items:</Text>
-    <Button fx:id="blacklistedHashButton" text="Hash" mnemonicParsing="false" onAction="#onBlacklistedHash" prefWidth="100"/>
-    <Button fx:id="blacklistedIPButton" text="IP" mnemonicParsing="false" onAction="#onBlacklistedIP" prefWidth="100"/>
-    <Button fx:id="blacklistedMemorySNButton" text="MemorySN" mnemonicParsing="false" onAction="#onBlacklistedMemorySN" prefWidth="100"/>
-    <Button fx:id="blacklistedSNButton" text="SN" mnemonicParsing="false" onAction="#onBlacklistedSN" prefWidth="100"/>
-    <Button fx:id="blacklistedUUIDButton" text="UUID" mnemonicParsing="false" onAction="#onBlacklistedUUID" prefWidth="100"/>
-    <Button fx:id="blacklistedVolumeSNButton" text="VolumeSN" mnemonicParsing="false" onAction="#onBlacklistedVolumeSN" prefWidth="100"/>
+    <Button fx:id="blacklistedHashButton" mnemonicParsing="false" onAction="#onBlacklistedHash" prefWidth="100" text="Hash" />
+    <Button fx:id="blacklistedIPButton" mnemonicParsing="false" onAction="#onBlacklistedIP" prefWidth="100" text="IP" />
+    <Button fx:id="blacklistedMemorySNButton" mnemonicParsing="false" onAction="#onBlacklistedMemorySN" prefWidth="100" text="MemorySN" />
+    <Button fx:id="blacklistedSNButton" mnemonicParsing="false" onAction="#onBlacklistedSN" prefWidth="100" text="SN" />
+    <Button fx:id="blacklistedUUIDButton" mnemonicParsing="false" onAction="#onBlacklistedUUID" prefWidth="100" text="UUID" />
+    <Button fx:id="blacklistedVolumeSNButton" mnemonicParsing="false" onAction="#onBlacklistedVolumeSN" prefWidth="100" text="VolumeSN" />
     <Separator prefHeight="10" />
     <Text style="-fx-font-size: 12pt;">Items to exclude:</Text>
-    <Button fx:id="excludedItemsButton" text="excludedItems" mnemonicParsing="false" onAction="#onExcludedItems" prefWidth="100"/>
-    <Text textAlignment="CENTER"  text="Check link for newest list of junk/malformed hardware IDs or use own list"/>
-    <TextField fx:id="genericJunkButton" minWidth="300" text="https://faforever.zulipchat.com/#narrow/stream/203851-moderators/topic/modified.20mordor"/>
+    <Button fx:id="excludedItemsButton" mnemonicParsing="false" onAction="#onExcludedItems" prefWidth="100" text="excludedItems" />
+    <Text text="Check link for newest list of junk/malformed hardware IDs or use own list" textAlignment="CENTER" />
+    <TextField fx:id="genericJunkButton" minWidth="300" text="https://faforever.zulipchat.com/#narrow/stream/203851-moderators/topic/modified.20mordor" />
     <Separator prefHeight="10" />
-    <Button fx:id="templateCompletedButton" text="Open template for completed report" mnemonicParsing="false" onAction="#onTemplateCompletedButton" prefWidth="300"/>
-    <Button fx:id="templateDiscardedButton" text="Open template for discarded report" mnemonicParsing="false" onAction="#onTemplateDiscardedButton" prefWidth="300"/>
-    <Button fx:id="templatePoorReportQualityButton" text="Open template for 'PoorReportQuality' report" mnemonicParsing="false" onAction="#onTemplatePoorReportQualityButton" prefWidth="300"/>
+    <Button fx:id="templateCompletedButton" mnemonicParsing="false" onAction="#onTemplateCompletedButton" prefWidth="300" text="Open template for completed report" />
+    <Button fx:id="templateDiscardedButton" mnemonicParsing="false" onAction="#onTemplateDiscardedButton" prefWidth="300" text="Open template for discarded report" />
+    <Button fx:id="templatePoorReportQualityButton" mnemonicParsing="false" onAction="#onTemplatePoorReportQualityButton" prefWidth="300" text="Open template for 'PoorReportQuality' report" />
     <Separator minHeight="10" />
-    <Button fx:id="templateButtonPermanentBanButton" text="Open template for permanent ban message" mnemonicParsing="false" onAction="#onTemplateButtonPermanentBanButton" prefWidth="300"/>
+    <Button fx:id="templateButtonPermanentBanButton" mnemonicParsing="false" onAction="#onTemplateButtonPermanentBanButton" prefWidth="300" text="Open template for permanent ban message" />
     <Separator minHeight="10" />
-    <Button fx:id="templateReasonsCheckBoxButton" text="Open template for checkBoxes" mnemonicParsing="false" onAction="#onReasonsTemplateCheckBoxButton" prefWidth="300"/>
+    <Button fx:id="templateReasonsCheckBoxButton" mnemonicParsing="false" onAction="#onReasonsTemplateCheckBoxButton" prefWidth="300" text="Open template for checkBoxes" />
     <Separator minHeight="10" />
     <MenuBar xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
-        <Menu fx:id="defaultStartingTabMenuBar" text="Choose default starting tab:">
-            <MenuItem fx:id="optionUserManagementTab" text="userManagementTab" onAction="#onOptionUserManagementTabClicked"/>
-            <MenuItem fx:id="optionReportTab" text="reportTab" onAction="#handleOptionReportTabClicked"/>
-            <MenuItem fx:id="optionRecentActivityTab" text="recentActivityTab" onAction="#onOptionRecentActivityTabClicked"/>
-        </Menu>
+        <Menu fx:id="defaultStartingTabMenuBar" text="Choose default starting tab:" />
     </MenuBar>
     <Separator minHeight="10" />
-    <Text style="-fx-font-size: 12pt;" text="Options for ReportsTab"/>
-    <CheckBox fx:id="autoDiscardCheckBox" text="auto discard report if click on blueprint button"/>
-    <CheckBox fx:id="autoCompleteCheckBox" text="auto complete report if click on blueprint button"/>
-    <Button fx:id="saveButton" text="SaveCheckboxes" onAction="#onSaveButtonForCheckBox"/>
+    <Text style="-fx-font-size: 12pt;" text="Options for ReportsTab" />
+    <CheckBox fx:id="autoDiscardCheckBox" text="auto discard report if click on blueprint button" />
+    <CheckBox fx:id="autoCompleteCheckBox" text="auto complete report if click on blueprint button" />
+    <Button fx:id="saveButton" onAction="#onSaveButtonForCheckBox" text="SaveCheckboxes" />
     <Separator minHeight="10" />
-    <Button fx:id="openConfigurationFolderButton" text="Open configuration folder" mnemonicParsing="false" onAction="#onOpenConfigurationFolder"/>
+    <Button fx:id="openConfigurationFolderButton" mnemonicParsing="false" onAction="#onOpenConfigurationFolder" text="Open configuration folder" />
 </VBox>

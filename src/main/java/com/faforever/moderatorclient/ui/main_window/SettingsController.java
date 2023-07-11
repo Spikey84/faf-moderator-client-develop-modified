@@ -1,8 +1,9 @@
 package com.faforever.moderatorclient.ui.main_window;
 
+import com.google.common.collect.Lists;
 import javafx.event.ActionEvent;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
@@ -54,7 +55,11 @@ public class SettingsController implements Controller<Region> {
     public Button openConfigurationFolderButton;
     public Button templatePoorReportQualityButton;
 
-    private void setDefaultTab(String tabName) {
+    public List<Tab> tabs;
+
+    private void setDefaultTab(Tab tab) {
+        String tabName = tab.getId();
+
         Properties config = new Properties();
         try {
             config.load(new FileInputStream(CONFIGURATION_FOLDER + File.separator + "config.properties"));
@@ -66,16 +71,12 @@ public class SettingsController implements Controller<Region> {
         }
     }
 
-    public void onOptionUserManagementTabClicked() {
-        setDefaultTab("userManagementTab");
+    public void handleDefaultTabClick(Tab tab) {
+        setDefaultTab(tab);
     }
 
-    public void handleOptionReportTabClicked() {
-        setDefaultTab("reportTab");
-    }
-
-    public void onOptionRecentActivityTabClicked() {
-        setDefaultTab("recentActivityTab");
+    public void setTabs(List<Tab> tabs) {
+        this.tabs = tabs;
     }
 
     @Override
@@ -162,6 +163,23 @@ public class SettingsController implements Controller<Region> {
             }
         }
         loadConfigurationProperties();
+    }
+
+    public void initTabStuff() {
+        for (Tab tab : tabs) {
+            MenuItem menuItem = new MenuItem(tab.getText());
+            menuItem.setId(tab.getId());
+            menuItem.setOnAction((event) -> {
+                MenuItem menItem = (MenuItem) event.getSource();
+                String string = menItem.getId();
+                for (Tab t : tabs) {
+                    if (!t.getId().equals(string)) continue;
+                    setDefaultTab(t);
+                    break;
+                }
+            });
+            defaultStartingTabMenuBar.getItems().add(menuItem);
+        }
     }
 
     public void createTemplatePoorReportQuality() {

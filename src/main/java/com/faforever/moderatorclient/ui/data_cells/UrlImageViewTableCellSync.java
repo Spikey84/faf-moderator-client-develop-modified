@@ -12,7 +12,7 @@ import javafx.scene.image.ImageView;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-public class UrlImageViewTableCell<T> extends TableCell<T, String> {
+public class UrlImageViewTableCellSync<T> extends TableCell<T, String> {
     private ImageView imageView = new ImageView();
     private String currentUrl;
 
@@ -20,12 +20,7 @@ public class UrlImageViewTableCell<T> extends TableCell<T, String> {
     protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
 
-
-        if (item == null) return;
-        Task<Void> task = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                if (item != null) {
+            if (item != null) {
                     if (!Objects.equals(currentUrl, item)) {
                         currentUrl = item;
                         Image img;
@@ -42,21 +37,13 @@ public class UrlImageViewTableCell<T> extends TableCell<T, String> {
                         }
                         imageView.setImage(img);
                     }
-                    Platform.runLater(() -> {
-                        if (Objects.equals(currentUrl, item)) {
-                            setGraphic(imageView);
-                        }
 
-                    });
+                    setGraphic(imageView);
+
 
                 } else {
                     setGraphic(null);
                 }
-                return null;
-            }
-        };
-
-        new Thread(task).start();
 
     }
 

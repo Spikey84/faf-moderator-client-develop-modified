@@ -16,6 +16,9 @@ public class ModFX extends AbstractEntityFX {
     private final ObjectProperty<PlayerFX> uploader;
     private final ObservableList<ModVersionFX> versions;
     private final ObjectProperty<ModVersionFX> latestVersion;
+    private final StringProperty uploaderName;
+    private final StringProperty uploaderID;
+
 
     public ModFX() {
         recommended = new SimpleBooleanProperty();
@@ -24,6 +27,8 @@ public class ModFX extends AbstractEntityFX {
         latestVersion = new SimpleObjectProperty<>();
         displayName = new SimpleStringProperty();
         author = new SimpleStringProperty();
+        uploaderName = new SimpleStringProperty();
+        uploaderID = new SimpleStringProperty();
     }
 
     public boolean isRecommended() {
@@ -88,5 +93,16 @@ public class ModFX extends AbstractEntityFX {
 
     public ObjectProperty<PlayerFX> uploaderProperty() {
         return uploader;
+    }
+
+    public StringProperty getUploaderName() {
+        uploaderName.set(uploader.getValue().getLogin());
+        return uploaderName;
+    }
+
+    public StringProperty getUploaderID() {
+        if (uploader.getValue() != null) uploaderID.set(uploader.getValue().getId());
+        if (uploaderID != null) return uploaderID;
+        return uploaderName;
     }
 }

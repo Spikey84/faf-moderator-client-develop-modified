@@ -18,6 +18,7 @@ import com.faforever.moderatorclient.api.domain.VotingService;
 import com.faforever.moderatorclient.ui.caches.LargeThumbnailCache;
 import com.faforever.moderatorclient.ui.data_cells.TextAreaTableCell;
 import com.faforever.moderatorclient.ui.data_cells.UrlImageViewTableCell;
+import com.faforever.moderatorclient.ui.data_cells.UrlImageViewTableCellSync;
 import com.faforever.moderatorclient.ui.domain.AccountLinkFx;
 import com.faforever.moderatorclient.ui.domain.AvatarAssignmentFX;
 import com.faforever.moderatorclient.ui.domain.AvatarFX;
@@ -42,29 +43,14 @@ import com.faforever.moderatorclient.ui.domain.UserNoteFX;
 import com.faforever.moderatorclient.ui.domain.VotingChoiceFX;
 import com.faforever.moderatorclient.ui.domain.VotingQuestionFX;
 import com.faforever.moderatorclient.ui.domain.VotingSubjectFX;
+import com.faforever.moderatorclient.ui.main_window.LadderMapPoolController;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Control;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableColumn;
-import javafx.scene.control.TreeTableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
@@ -74,8 +60,6 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
@@ -876,7 +860,7 @@ public class ViewHelper {
 
         TableColumn<AvatarAssignmentFX, String> previewColumn = new TableColumn<>("Preview");
         previewColumn.setCellValueFactory(o -> o.getValue().avatarProperty().get().urlProperty());
-        previewColumn.setCellFactory(param -> new UrlImageViewTableCell<>());
+        previewColumn.setCellFactory(param -> new UrlImageViewTableCellSync<>());
         previewColumn.setMinWidth(50);
         tableView.getColumns().add(previewColumn);
         extractors.put(previewColumn, avatarAssignmentFX -> avatarAssignmentFX.getAvatar().getUrl());
@@ -1024,7 +1008,7 @@ public class ViewHelper {
         TableColumn<ModFX, String> idColumn = new TableColumn<>("Mod ID");
         idColumn.setCellValueFactory(o -> o.getValue().idProperty());
         idColumn.setComparator(Comparator.comparingInt(Integer::parseInt));
-        idColumn.setMinWidth(100);
+        idColumn.setMinWidth(60);
         tableView.getColumns().add(idColumn);
         extractors.put(idColumn, ModFX::getId);
 
@@ -1034,16 +1018,21 @@ public class ViewHelper {
         tableView.getColumns().add(nameColumn);
         extractors.put(nameColumn, ModFX::getDisplayName);
 
-        TableColumn<ModFX, PlayerFX> uploaderColumn = new TableColumn<>("Uploader");
-        uploaderColumn.setCellValueFactory(o -> o.getValue().uploaderProperty());
-        uploaderColumn.setCellFactory(o -> getPlayerFXTableCell());
-        uploaderColumn.setMinWidth(200);
+        TableColumn<ModFX, String> uploaderColumn = new TableColumn<>("Uploader");
+        uploaderColumn.setCellValueFactory(o -> o.getValue().getUploaderName());
+        uploaderColumn.setMinWidth(150);
         tableView.getColumns().add(uploaderColumn);
-        extractors.put(uploaderColumn, modFX -> modFX.getUploader().getLogin());
+        extractors.put(uploaderColumn, ModFX::getUploaderName);
+
+        TableColumn<ModFX, String> uploaderIDColumn = new TableColumn<>("UploaderID");
+        uploaderIDColumn.setCellValueFactory(o -> o.getValue().getUploaderID());
+        uploaderIDColumn.setMinWidth(80);
+        tableView.getColumns().add(uploaderIDColumn);
+        extractors.put(uploaderIDColumn, ModFX::getUploaderID);
 
         TableColumn<ModFX, String> authorColumn = new TableColumn<>("Author");
         authorColumn.setCellValueFactory(o -> o.getValue().authorProperty());
-        authorColumn.setMinWidth(200);
+        authorColumn.setMinWidth(150);
         tableView.getColumns().add(authorColumn);
         extractors.put(authorColumn, modFX -> modFX.getUploader().getLogin());
 
@@ -1092,7 +1081,7 @@ public class ViewHelper {
         };
     }
 
-    public static void buildMapTreeView(TreeTableView<MapTableItemAdapter> mapTreeView) {
+    public static void buildMapTreeView(TreeTableView<MapTableItemAdapter> mapTreeView, @Nullable Consumer<MapTableItemAdapter> removeFavorite, @Nullable Consumer<MapTableItemAdapter> addFavorite,  LadderMapPoolController ladderMapPoolController) {
         TreeTableColumn<MapTableItemAdapter, String> idColumn = new TreeTableColumn<>("ID");
         idColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("id"));
         idColumn.setComparator(Comparator.comparingInt(Integer::parseInt));
@@ -1103,6 +1092,43 @@ public class ViewHelper {
         nameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("nameOrDescription"));
         nameColumn.setMinWidth(300);
         mapTreeView.getColumns().add(nameColumn);
+
+        TreeTableColumn<MapTableItemAdapter, MapTableItemAdapter> favoriteColumn = new TreeTableColumn<>("Favorite");
+        favoriteColumn.setMinWidth(100);
+        favoriteColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("this"));
+        Callback<TreeTableColumn<MapTableItemAdapter, MapTableItemAdapter>, TreeTableCell<MapTableItemAdapter, MapTableItemAdapter>> cellFactory = new Callback<TreeTableColumn<MapTableItemAdapter, MapTableItemAdapter>, TreeTableCell<MapTableItemAdapter, MapTableItemAdapter>>() {
+            @Override
+            public TreeTableCell<MapTableItemAdapter, MapTableItemAdapter> call(TreeTableColumn<MapTableItemAdapter, MapTableItemAdapter> param) {
+                return new TreeTableCell<MapTableItemAdapter, MapTableItemAdapter>() {
+                    @Override
+                    public void updateItem(MapTableItemAdapter item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (!empty && item != null && !item.isMapVersion()) {
+                            if (ladderMapPoolController.isMapFavorite(Integer.parseInt(item.getId()))) {
+                                Button button = new Button("Unfavorite");
+                                button.setOnMouseClicked(event -> removeFavorite.accept(item));
+                                button.setTextFill(Color.rgb(200, 10, 10));
+
+                                setGraphic(button);
+                                return;
+                            } else {
+                                Button button = new Button("Favorite");
+                                button.setOnMouseClicked(event -> addFavorite.accept(item));
+                                button.setTextFill(Color.rgb(10, 200, 10));
+
+                                setGraphic(button);
+                                return;
+                            }
+                        }
+                        setGraphic(null);
+                    }
+                };
+            }
+        };
+
+        favoriteColumn.setCellFactory(cellFactory);
+
+        mapTreeView.getColumns().add(favoriteColumn);
 
         TreeTableColumn<MapTableItemAdapter, ComparableVersion> versionColumn = new TreeTableColumn<>("Version");
         versionColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("version"));
@@ -1130,6 +1156,7 @@ public class ViewHelper {
         mapTreeView.setRoot(rootTreeItem);
         mapTreeView.setShowRoot(false);
     }
+
 
     public static void buildMapFeedTableView(@NotNull TableView<MapVersionFX> tableView, @NotNull ObservableList<MapVersionFX> data, @Nullable Consumer<MapVersionFX> onToggleHide) {
         tableView.setItems(data);

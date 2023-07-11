@@ -842,7 +842,6 @@ public class ModerationReportController implements Controller<Region> {
         newReport.setModeratorNotice(report.getModeratorNotice());
         moderationReportService.patchReport(newReport);
         renewFilter();
-        //onRefreshAllReports();
     }
 
     @SneakyThrows
@@ -857,7 +856,6 @@ public class ModerationReportController implements Controller<Region> {
         newReport.setModeratorNotice(report.getModeratorNotice());
         moderationReportService.patchReport(newReport);
         renewFilter();
-        //onRefreshAllReports();
     }
 
     private void updateRightUi(ModerationReportFX reportFX) {

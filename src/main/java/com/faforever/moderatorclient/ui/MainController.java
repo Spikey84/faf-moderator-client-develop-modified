@@ -26,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.utils.Lists;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -70,6 +71,8 @@ public class MainController implements Controller<TabPane> {
     private TutorialController tutorialController;
     private MessagesController messagesController;
     private UserGroupsController userGroupsController;
+
+    public List<Tab> tabs = Lists.newArrayList();
     private final Map<Tab, Boolean> dataLoadingState = new HashMap<>();
     private final FafApiCommunicationService communicationService;
     public static final String CONFIGURATION_FOLDER = "ConfigurationModerationToolFAF";
@@ -81,12 +84,10 @@ public class MainController implements Controller<TabPane> {
         try (InputStream input = new FileInputStream(CONFIGURATION_FOLDER + "/config.properties")) {
             config.load(input);
             String userChoiceDefaultTab = config.getProperty("user.choice.tab");
-            if(userChoiceDefaultTab != null){
-                switch (userChoiceDefaultTab) {
-                    case "userManagementTab" -> root.getSelectionModel().select(userManagementTab);
-                    case "reportTab" -> root.getSelectionModel().select(reportTab);
-                    case "recentActivityTab" -> root.getSelectionModel().select(recentActivityTab);
-                }
+            for (Tab tab : tabs) {
+                if (!tab.getId().equals(userChoiceDefaultTab)) continue;
+                root.getSelectionModel().select(tab);
+                break;
             }
         } catch (IOException e) {
             log.debug(String.valueOf(e));
@@ -108,6 +109,7 @@ public class MainController implements Controller<TabPane> {
     }
 
     private void initializeAfterLogin() {
+        tabs.addAll(Arrays.asList(avatarsTab, banTab, domainBlacklistTab, mapVaultTab, matchmakerMapPoolTab, messagesTab, modVaultTab, permissionTab, recentActivityTab, reportTab, settingsTab, tutorialTab, userManagementTab, votingTab));
         initAvatarTab();
         initBanTab();
         initDomainBlacklistTab();
@@ -118,16 +120,22 @@ public class MainController implements Controller<TabPane> {
         initPermissionTab();
         initRecentActivityTab();
         initReportTab();
-        initSettingsTab();
+        initSettingsTab(getTabs());
         initTutorialTab();
         initUserManagementTab();
         initVotingTab();
     }
-    private void initSettingsTab() {
+    private void initSettingsTab(List<Tab> tabs) {
         settingsController = uiService.loadFxml("ui/main_window/settingsTab.fxml");
+        settingsController.setTabs(tabs);
+        settingsController.initTabStuff();
         settingsTab.setContent(settingsController.getRoot());
-
     }
+
+    public List<Tab> getTabs() {
+        return tabs;
+    }
+
     private void initLoading(Tab tab, Runnable loadingFunction) {
         dataLoadingState.put(tab, false);
         tab.setOnSelectionChanged(event -> {
