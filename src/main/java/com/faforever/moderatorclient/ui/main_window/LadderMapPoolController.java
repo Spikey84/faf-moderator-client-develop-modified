@@ -371,7 +371,7 @@ public class LadderMapPoolController implements Controller<SplitPane> {
                 List<Map> mapsTmp;
                 String finalMapNamePattern = mapNamePattern;
 
-                if (finalMapNamePattern == "") {
+                if (finalMapNamePattern.equals("")) {
                     mapsTmp = mapService.findMaps("");
                 } else {
                     mapsTmp = mapService.findMaps('*' + mapNamePattern + '*');
